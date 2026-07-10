@@ -9,6 +9,7 @@ bool valid_command(string s){
 }
 
 
+
 int main() {
   // Flush after every std::cout / std:cerr
 	cout << std::unitbuf;
@@ -21,7 +22,7 @@ int main() {
 
 		if(!getline(cin, line)) break;
 		
-		if(line == "quit()") break;
+		if(line == "exit") break;
 
 		if(!valid_command(line)) cout << line << ": command not found";
 		cout << "\n";
