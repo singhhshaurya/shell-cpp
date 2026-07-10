@@ -62,8 +62,11 @@ int main() {
 		
 		vector<string> tokens = split(line);
 		string command = tokens[0];
-		string args;
+		if (command.empty()) {
+			continue;
+		}
 
+		string args;
 		if(command.size()==line.size()) args = "";
 		else args = line.substr(command.size()+1, line.size() - command.size()-1);
 
@@ -75,12 +78,6 @@ int main() {
 
 		cout << "\n";
 
-
-
-
 	}
-
-	return 1;
-
 }
 
