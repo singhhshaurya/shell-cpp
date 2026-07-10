@@ -3,12 +3,25 @@
 
 using namespace std;
 
+
+bool valid_command(string s){
+  return false;
+}
+
 int main() {
   // Flush after every std::cout / std:cerr
-  std::cout << std::unitbuf;
-  std::cerr << std::unitbuf;
+  cout << std::unitbuf;
+  cerr << std::unitbuf;
 
 
-  std::cout << "$ ";
+  cout << "$ ";
 
+  string a;
+  cin >> a;
+
+  if(!valid_command(a)) cout << a << ": command not found";
+
+  cout << "\n";
+  
 }
+
