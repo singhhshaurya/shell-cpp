@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <functional>
+#include <unordered_set>
 
 using namespace std;
 
@@ -25,25 +26,35 @@ vector<string> split(string s, char delimeter=' '){
 
 
 
+unordered_set<string> builtins = {"echo", "exit", "type"};
+
+bool invalid_command(string s){
+	return builtins.find(s) == builtins.end();
+}
+
+
+void type(string& command){
+	if(builtins.find(command) != builtins.end()){
+		cout << command << " is a shell builtin";
+	}else{
+		cout << command << " command not found";
+	}
+}
+
 
 void echo(string& s){
 	cout << s;
 }
 
-unordered_map<string, function<void(string&)>> commands = {{"echo", echo}};
 
 
-
-
+unordered_map<string, function<void(string&)>> commands = {{"echo", echo}, {"type", type}};
 void execute_line(string& command, string& args){
+
 	commands[command](args); // execute that 
 
-
 }
 
-bool invalid_command(string s){
-	return commands.find(s) == commands.end();
-}
 
 
 
