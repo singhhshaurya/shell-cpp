@@ -58,7 +58,6 @@ int main() {
 		cout << "$ ";
 
 		if(!getline(cin, line)) break;
-		if(line == "exit") break;
 
 		
 		vector<string> tokens = split(line);
@@ -68,6 +67,8 @@ int main() {
 		if(command.size()==line.size()) args = "";
 		else args = line.substr(command.size()+1, line.size() - command.size()-1);
 
+
+		if(command == "exit") break;
 		if(invalid_command(command)) cout << command << ": command not found";
 		else execute_line(command, args);
 

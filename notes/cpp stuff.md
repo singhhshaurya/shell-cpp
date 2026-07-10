@@ -1,5 +1,7 @@
 # CPP
 
+
+alias run='g++ src/main.cpp -o main && ./main'
 ```cpp
 
 
