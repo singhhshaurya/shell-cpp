@@ -5,8 +5,11 @@
 #include <unordered_map>
 #include <functional>
 #include <unordered_set>
+#include <filesystem>
+
 
 using namespace std;
+using namespace filesystem;
 
 vector<string> split(string s, char delimeter=' '){
 	vector<string> ans;
@@ -27,18 +30,36 @@ vector<string> split(string s, char delimeter=' '){
 
 
 unordered_set<string> builtins = {"echo", "exit", "type"};
+string PATH = "/usr/bin:/usr/local/bin";
+
 
 bool invalid_command(string s){
 	return builtins.find(s) == builtins.end();
 }
 
 
-void type(string& command){
+int type(string& command){
 	if(builtins.find(command) != builtins.end()){
 		cout << command << " is a shell builtin";
-	}else{
-		cout << command << ": not found";
+		return 1;
 	}
+
+	for(string path:split(PATH, ':')){
+		if(!is_directory(path)) continue;
+		for (auto& entry : directory_iterator(path)) {
+			if (entry.is_regular_file()){
+				string filename = entry.path().filename().string();
+				if(filename.size() > 4 && 
+				filename.substr(0, filename.size()-4) == command && 
+				filename.substr(filename.size()-4, 4) == ".exe"){
+					cout << command << " is " << path << "\\" << filename;
+					return 1;
+				}
+			}
+		}
+	}
+	cout << command << ": not found";
+	return 1;
 }
 
 
