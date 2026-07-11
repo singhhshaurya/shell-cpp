@@ -33,8 +33,9 @@ vector<string> split(string s, char delimeter=' '){
 
 
 unordered_set<string> builtins = {"echo", "exit", "type"};
-// string PATH = getenv("PATH"); // gets path from environment.
-string PATH = "/usr/bin:/usr/local/bin";
+string PATH = getenv("PATH"); // gets path from environment.
+
+// string PATH = "/usr/bin:/usr/local/bin";
 bool invalid_command(string s){
 	return builtins.find(s) == builtins.end();
 }
