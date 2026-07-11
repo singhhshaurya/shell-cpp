@@ -7,6 +7,8 @@
 #include <functional>
 #include <unordered_set>
 #include <filesystem>
+#include <unistd.h>
+
 
 
 using namespace std;
@@ -31,8 +33,7 @@ vector<string> split(string s, char delimeter=' '){
 
 
 unordered_set<string> builtins = {"echo", "exit", "type"};
-string PATH = getenv("PATH");
-
+string PATH = getenv("PATH"); // gets path from environment.
 
 bool invalid_command(string s){
 	return builtins.find(s) == builtins.end();
@@ -52,7 +53,8 @@ int type(string& command){
 				string filename = entry.path().filename().string();
 				if(filename.size() > 4 && 
 				filename.substr(0, filename.size()-4) == command && 
-				filename.substr(filename.size()-4, 4) == ".exe"){
+				access(path.c_str(), X_OK) == 0) {
+
 					cout << command << " is " << path << "/" << command;
 					return 1;
 				}
