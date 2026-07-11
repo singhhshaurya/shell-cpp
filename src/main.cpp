@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -30,7 +31,7 @@ vector<string> split(string s, char delimeter=' '){
 
 
 unordered_set<string> builtins = {"echo", "exit", "type"};
-string PATH = "/usr/bin:/usr/local/bin";
+string PATH = getenv("PATH");
 
 
 bool invalid_command(string s){
@@ -52,7 +53,7 @@ int type(string& command){
 				if(filename.size() > 4 && 
 				filename.substr(0, filename.size()-4) == command && 
 				filename.substr(filename.size()-4, 4) == ".exe"){
-					cout << command << " is " << path << "\\" << filename;
+					cout << command << " is " << path << "/" << command;
 					return 1;
 				}
 			}
