@@ -37,7 +37,7 @@ void type(string& command){
 	if(builtins.find(command) != builtins.end()){
 		cout << command << " is a shell builtin";
 	}else{
-		cout << command << " command not found";
+		cout << command << ": not found";
 	}
 }
 
