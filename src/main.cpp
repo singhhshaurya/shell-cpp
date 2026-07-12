@@ -33,9 +33,9 @@ vector<string> split(string s, char delimeter=' '){
 
 
 unordered_set<string> builtins = {"echo", "exit", "type"};
-string PATH = getenv("PATH"); // gets path from environment.
+// string PATH = getenv("PATH"); // gets path from environment.
 
-// string PATH = "/usr/bin:/usr/local/bin";
+string PATH = "/usr/bin:/usr/local/bin:/tmp/pig:/tmp/owl:/tmp/dog:";
 bool invalid_command(string s){
 	return builtins.find(s) == builtins.end();
 }
@@ -51,9 +51,9 @@ int type(string& command){
 		if(!is_directory(path)) continue;
 		for (auto& entry : directory_iterator(path)) {
 			if (entry.is_regular_file()){
-				string filename = entry.path().filename().string();
-				if(filename == command && 
-				access(path.c_str(), X_OK) == 0) {
+				auto filename = entry.path().filename();
+				if(filename.string() == command && 
+				access((path+"/"+filename.string()).c_str(), X_OK) == 0) {
 
 					cout << command << " is " << path << "/" << command;
 					return 1;
