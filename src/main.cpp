@@ -77,6 +77,7 @@ void execute_program(string& program, vector<string>& args){
 		} else {
 			// parent process
 			waitpid(pid, nullptr, 0);
+			cout << "\033[A";
 
 
 		}
@@ -159,7 +160,7 @@ int main() {
 		execute_line(command, args);
 
 
-		// cout << "\n";
+		cout << "\n";
 
 	}
 }
