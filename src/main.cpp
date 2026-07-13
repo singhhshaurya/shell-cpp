@@ -8,12 +8,11 @@
 #include <unordered_set>
 #include <filesystem>
 #include <unistd.h>
-
+#include <sys/wait.h>
 
 
 using namespace std;
 using namespace filesystem;
-
 vector<string> split(string s, char delimeter=' '){
 	vector<string> ans;
 	int ptr = 0; 
@@ -29,54 +28,107 @@ vector<string> split(string s, char delimeter=' '){
 
 }
 
-
-
-
 unordered_set<string> builtins = {"echo", "exit", "type"};
-// string PATH = getenv("PATH"); // gets path from environment.
+string PATH = getenv("PATH"); // gets path from environment.
+// string PATH = "/usr/bin:/usr/local/bin:/tmp/pig:/tmp/owl:/tmp/dog:";
 
-string PATH = "/usr/bin:/usr/local/bin:/tmp/pig:/tmp/owl:/tmp/dog:";
-bool invalid_command(string s){
-	return builtins.find(s) == builtins.end();
-}
-
-
-int type(string& command){
-	if(builtins.find(command) != builtins.end()){
-		cout << command << " is a shell builtin";
-		return 1;
-	}
-
+string program_find_in_path(string command){
 	for(string path:split(PATH, ':')){
 		if(!is_directory(path)) continue;
 		for (auto& entry : directory_iterator(path)) {
 			if (entry.is_regular_file()){
 				auto filename = entry.path().filename();
-				if(filename.string() == command && 
-				access((path+"/"+filename.string()).c_str(), X_OK) == 0) {
-
-					cout << command << " is " << path << "/" << command;
-					return 1;
+				if(filename.string() == command) {
+					return path + "/" + filename.string();
+					
 				}
 			}
 		}
 	}
+	return "";
+}
+
+
+bool is_executable(string path){
+	return access(path.c_str(), X_OK) == 0;
+}
+
+
+void execute_program(string& program, vector<string>& args){
+	string path = program_find_in_path(program);
+
+	vector<char*> argv;
+	for(int i=0; i<args.size(); i++){
+		argv.push_back(args[i].data());
+	}
+	argv.push_back(nullptr);
+
+	if(path!="" && is_executable(path)) {
+		pid_t pid = fork();
+		if (pid < 0) {
+			std::cerr << "fork() failed\n";     // fork failed
+
+		} else if (pid == 0) {
+			// child process
+			execv(path.data(), argv.data());
+			perror("execv"); // execv() failed
+			exit(1); // exit child process with error code
+
+		} else {
+			// parent process
+			waitpid(pid, nullptr, 0);
+
+
+		}
+
+	}
+	else cout << program << ": command not found";
+
+}
+
+
+
+bool invalid_command(string s){
+	return builtins.find(s) == builtins.end();
+}
+
+
+int type(vector<string>& args){
+	// check if its builtin
+	string command = args[0];
+	if(builtins.find(command) != builtins.end()){
+		cout << command << " is a shell builtin";
+		return 1;
+	}
+
+
+	// check if its in path and executable.
+	string path = program_find_in_path(command);
+	if(path != "" && is_executable(path)){
+		cout << command << " is " << path;
+		return 1;
+	}
+
 	cout << command << ": not found";
 	return 1;
 }
 
 
-void echo(string& s){
-	cout << s;
+void echo(vector<string>& args){
+	for(int i=0; i<args.size()-1; i++) cout << args[i] << " ";
+	cout << args.back();
 }
 
 
 
-unordered_map<string, function<void(string&)>> commands = {{"echo", echo}, {"type", type}};
-void execute_line(string& command, string& args){
 
-	commands[command](args); // execute that 
-
+unordered_map<string, function<void(vector<string>&)>> commands = {{"echo", echo}, {"type", type}};
+void execute_line(string& command, vector<string>& args){
+	if (commands.find(command)!=commands.end()){
+		commands[command](args); // execute that 
+	}else{
+		execute_program(command, args);
+	}
 }
 
 
@@ -101,14 +153,10 @@ int main() {
 			continue;
 		}
 
-		string args;
-		if(command.size()==line.size()) args = "";
-		else args = line.substr(command.size()+1, line.size() - command.size()-1);
-
+		vector<string> args(tokens.begin()+1, tokens.end());
 
 		if(command == "exit") break;
-		if(invalid_command(command)) cout << command << ": command not found";
-		else execute_line(command, args);
+		execute_line(command, args);
 
 
 		cout << "\n";

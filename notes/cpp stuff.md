@@ -45,3 +45,10 @@ int main() {
 
 // Flush after every output operation. Every output operation will be immediately sent to the terminal and visible, rather than being buffered. This is useful for real-time output, such as logging or interactive applications, where you want to see the output immediately. 
 
+
+
+## char* vs string
+- use str.data() to get a pointer to the underlying character array of a std::string. 
+- Used when you need to pass a string to a function that expects a C-style string (char*), such as many functions in the C standard library.
+
+- vector<char*> can also be converted to char*[] using data() method of vector. This is useful when you need to pass an array of C-style strings to a function that expects char*[].
