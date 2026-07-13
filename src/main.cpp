@@ -35,7 +35,6 @@ string program_find_in_path(string command){
 	// string PATH = getenv("PATH"); // gets path from environment.
 
 	for(string path:split(PATH, ':')){
-		cout << path << " ";
 		if(!is_directory(path)) continue;
 		for (auto& entry : directory_iterator(path)) {
 			if (entry.is_regular_file()){
