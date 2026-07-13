@@ -29,10 +29,11 @@ vector<string> split(string s, char delimeter=' '){
 }
 
 unordered_set<string> builtins = {"echo", "exit", "type"};
-string PATH = getenv("PATH"); // gets path from environment.
 // string PATH = "/usr/bin:/usr/local/bin:/tmp/pig:/tmp/owl:/tmp/dog:";
 
 string program_find_in_path(string command){
+	string PATH = getenv("PATH"); // gets path from environment.
+
 	for(string path:split(PATH, ':')){
 		if(!is_directory(path)) continue;
 		for (auto& entry : directory_iterator(path)) {
