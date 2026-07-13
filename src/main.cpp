@@ -159,7 +159,7 @@ int main() {
 		execute_line(command, args);
 
 
-		cout << "\n";
+		// cout << "\n";
 
 	}
 }
