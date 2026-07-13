@@ -57,7 +57,7 @@ bool is_executable(string path){
 void execute_program(string& program, vector<string>& args){
 	string path = program_find_in_path(program);
 
-	vector<char*> argv;
+	vector<char*> argv = {program.data()};
 	for(int i=0; i<args.size(); i++){
 		argv.push_back(args[i].data());
 	}
