@@ -33,18 +33,15 @@ unordered_set<string> builtins = {"echo", "exit", "type"};
 
 string program_find_in_path(string command){
 	string PATH = getenv("PATH"); // gets path from environment.
-	cout << PATH << "\n";
+	// cout << PATH << "\n";
 
-	for(string path:split(PATH, ':')){
-		if(!is_directory(path)) continue;
-		for (auto& entry : directory_iterator(path)) {
-			if (entry.is_regular_file()){
-				auto filename = entry.path().filename();
-				if(filename.string() == command) {
-					return path + "/" + filename.string();
-					
-				}
-			}
+	for(string dir:split(PATH, ':')){
+		path candidate = path(dir) / command;
+
+		if (exists(candidate) &&
+			is_regular_file(candidate) &&
+			access(candidate.c_str(), X_OK) == 0) {
+			return candidate.string();
 		}
 	}
 	return "";
