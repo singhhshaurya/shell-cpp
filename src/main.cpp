@@ -33,6 +33,7 @@ unordered_set<string> builtins = {"echo", "exit", "type"};
 
 string program_find_in_path(string command){
 	string PATH = getenv("PATH"); // gets path from environment.
+	cout << PATH << "\n";
 
 	for(string path:split(PATH, ':')){
 		if(!is_directory(path)) continue;
