@@ -175,7 +175,7 @@ int main() {
 		vector<string> commands_executed = {};
 
 		// cout << curr_directory << "$ ";
-		cout << "$";
+		cout << "$ ";
 		if(!getline(cin, line)) break;
 		commands_executed.push_back(line);
 
