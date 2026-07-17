@@ -67,4 +67,76 @@ int main() {
 
   #include <unistd.h> for POSIX functions like fork(), exec(), wait(), pipe(), and cwd().
 
-  
+
+  ## ESCAPE SEQUENCES
+
+  | Escape | Meaning                                     | Example                   |
+| ------ | ------------------------------------------- | ------------------------- |
+| `\n`   | New line                                    | `cout << "Hello\nWorld";` |
+| `\t`   | Horizontal tab                              | `cout << "A\tB";`         |
+| `\b`   | Backspace                                   | `cout << "ABC\bD";`       |
+| `\r`   | Carriage return (move to beginning of line) | `cout << "Hello\rHi";`    |
+| `\\`   | Backslash (`\`)                             | `cout << "\\";`           |
+| `\'`   | Single quote (`'`)                          | `char c = '\'';`          |
+| `\"`   | Double quote (`"`)                          | `cout << "\"Hello\"";`    |
+| `\0`   | Null character                              | `char c = '\0';`          |
+| `\a`   | Alert/Bell (beep, if supported)             | `cout << "\a";`           |
+| `\f`   | Form feed                                   | Rarely used               |
+| `\v`   | Vertical tab                                | Rarely used               |
+| `\?`   | Literal `?` (rarely needed)                 | `cout << "\?";`           |
+
+
+
+### CURSOR MOVEMENTS
+| Sequence   | Action                     | Typical use            |
+| ---------- | -------------------------- | ---------------------- |
+| `\033[A`   | Move cursor up 1 line      | Command history redraw |
+| `\033[B`   | Move cursor down 1 line    | Menus                  |
+| `\033[C`   | Move cursor right 1 column | Cursor editing         |
+| `\033[D`   | Move cursor left 1 column  | Left arrow editing     |
+| `\033[5A`  | Move up 5 lines            | Multi-line editing     |
+| `\033[10C` | Move right 10 columns      | Jump cursor            |
+
+### CURSOR POSITIONING
+| Sequence        | Action               | Use                |
+| --------------- | -------------------- | ------------------ |
+| `\033[H`        | Top-left corner      | Home position      |
+| `\033[row;colH` | Move to row & column | Drawing interfaces |
+| `\033[f`        | Same as `H`          | Cursor positioning |
+
+
+### CLEARING
+| Sequence  | Action                     | Use                    |
+| --------- | -------------------------- | ---------------------- |
+| `\033[2J` | Clear entire screen        | `clear` command        |
+| `\033[J`  | Clear from cursor downward | Partial refresh        |
+| `\033[K`  | Clear to end of line       | Updating prompts       |
+| `\033[2K` | Clear whole current line   | Redrawing command line |
+
+### ARROW KEYS
+| Key | Bytes received |
+| --- | -------------- |
+| ↑   | `\033[A`       |
+| ↓   | `\033[B`       |
+| →   | `\033[C`       |
+| ←   | `\033[D`       |
+
+
+### TEXT FORMATTING
+| Escape    | Meaning        |
+| --------- | -------------- |
+| `\033[0m` | Reset          |
+| `\033[1m` | Bold           |
+| `\033[4m` | Underline      |
+| `\033[7m` | Reverse colors |
+
+### COLORS
+
+`\033[30m` Black
+`\033[31m` Red
+`\033[32m` Green
+`\033[33m` Yellow
+`\033[34m` Blue
+`\033[35m` Magenta
+`\033[36m`  Cyan
+`\033[37m` White
