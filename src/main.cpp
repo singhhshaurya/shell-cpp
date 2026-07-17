@@ -144,7 +144,7 @@ void cd(vector<string>& args){
 				curr_directory = path;
 			}
 			else {
-				cout << path << ": no such file or directory" << "\n";
+				cout << "cd: " << path << ": no such file or directory" << "\n";
 			}
 		}
 	}
