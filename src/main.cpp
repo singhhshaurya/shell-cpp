@@ -152,7 +152,7 @@ void cd(vector<string>& args){
 			vector<string> folders = split(path, '/');
 
 			for(string folder:folders){
-				if(folder==".") continue;
+				if(folder=="." || folder == "") continue;
 
 				else if(folder == ".." && temp_curr_directory.has_parent_path()) {
 					temp_curr_directory = temp_curr_directory.parent_path();
@@ -195,8 +195,8 @@ int main() {
 	while(true){
 		vector<string> commands_executed = {};
 
-		// cout << curr_directory << "$ ";
-		cout << "$ ";
+		cout << curr_directory.string() << "$ ";
+		// cout << "$ ";
 		if(!getline(cin, line)) break;
 		commands_executed.push_back(line);
 
