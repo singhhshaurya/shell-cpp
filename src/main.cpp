@@ -30,7 +30,7 @@ vector<string> split(string s, char delimeter=' '){
 
 
 unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
-string curr_directory  = getcwd(nullptr, 0); // posix function to get current directory.
+path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory.
 
 
 
@@ -125,7 +125,7 @@ void echo(vector<string>& args){
 
 
 void pwd(vector<string>& args){
-	cout << curr_directory;
+	cout << curr_directory.string();
 }
 
 
@@ -135,7 +135,7 @@ void cd(vector<string>& args){
 		curr_directory = const_cast<char*>("");
 
 	}else if(args.size()>1){
-		cout << "cd: too many arguments";
+		cout << "cd: too many arguments" << "\n";
 	}
 	else{
 		string path = args[0];
@@ -146,6 +146,27 @@ void cd(vector<string>& args){
 			else {
 				cout << "cd: " << path << ": No such file or directory" << "\n";
 			}
+		}
+		else{
+			filesystem::path temp_curr_directory = curr_directory;
+			vector<string> folders = split(path, '/');
+
+			for(string folder:folders){
+				if(folder==".") continue;
+
+				else if(folder == ".." && temp_curr_directory.has_parent_path()) {
+					temp_curr_directory = temp_curr_directory.parent_path();
+				}
+				else{
+					if(exists(temp_curr_directory / folder)) temp_curr_directory = temp_curr_directory / folder;
+					else{
+						cout << "cd: " << path << ": No such file or directory" << "\n";
+						break;
+					}
+				}
+			}
+			curr_directory = temp_curr_directory;
+
 		}
 	}
 	cout << "\033[A"; // remove the last "\n"
@@ -174,8 +195,8 @@ int main() {
 	while(true){
 		vector<string> commands_executed = {};
 
-		// cout << curr_directory << "$ ";
-		cout << "$ ";
+		cout << curr_directory << "$ ";
+		// cout << "$ ";
 		if(!getline(cin, line)) break;
 		commands_executed.push_back(line);
 
