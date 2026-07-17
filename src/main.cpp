@@ -40,13 +40,21 @@ vector<string> get_args(string& command){
 			curr += c; // no special meaning just add that shi
 			back_slash = 0;
 		}
-		else if(c == '\\' && single_quotes_closed && double_quotes_closed) back_slash = 1;
+		// backslashes
+		else if(c == '\\' && single_quotes_closed) back_slash = 1;
+		
+
+		// quotation marks
 		else if(c=='\'' && double_quotes_closed) single_quotes_closed = !single_quotes_closed;
 		else if(c=='\"' && single_quotes_closed) double_quotes_closed = !double_quotes_closed;
+
+		// space
 		else if(c == ' ' && single_quotes_closed && double_quotes_closed){
 			if(curr != "") args.push_back(curr);
 			curr = "";
 		}
+
+
 		else curr += c;
 
 	}
