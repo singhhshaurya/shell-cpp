@@ -35,8 +35,8 @@ vector<string> get_args(string& command){
 
 	string curr;
 	for(char c:command){
-		if(c=='\'') single_quotes_closed = !single_quotes_closed;
-		else if(c=='\"') double_quotes_closed = !double_quotes_closed;
+		if(c=='\'' && double_quotes_closed) single_quotes_closed = !single_quotes_closed;
+		else if(c=='\"' && single_quotes_closed) double_quotes_closed = !double_quotes_closed;
 		else if(c == ' ' && single_quotes_closed && double_quotes_closed){
 			if(curr != "") args.push_back(curr);
 			curr = "";
@@ -227,6 +227,7 @@ int main() {
 
 	string line;
 	
+
 	while(true){
 		vector<string> commands_executed = {};
 
@@ -238,7 +239,7 @@ int main() {
 
 		// parsing the line.
 
-		vector<string> tokens = get_args(line);
+		vector<string> tokens = get_args(line); 
 		string command = tokens[0];
 		if (command.empty()) {
 			continue;

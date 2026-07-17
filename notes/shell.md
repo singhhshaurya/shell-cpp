@@ -152,3 +152,17 @@ if  (pid < 0) {
 
 - exit(1) returns exit code 1 to the parent process, indicating that the child process encountered an error. 
 - exit code 1 means "general error" in Unix-like operating systems. 
+
+## Single quotes and double quotes
+These matter because a shell must decide how to parse input before executing a command.
+
+- Single quotes (`'...'`) make everything inside literal. The shell does not expand variables, command substitution, or special characters.
+- Double quotes (`"..."`) still preserve spaces and prevent word splitting, but they allow variable expansion and command substitution.
+- Unquoted text is split on spaces and treated as separate words, and special characters may be interpreted by the shell.
+- A shell should handle quotes carefully when splitting input into arguments, because quotes are not passed to the program as ordinary characters.
+- Example:
+  - `echo '$PATH'` prints the literal `$PATH`
+  - `echo "$PATH"` prints the current value of the environment variable
+  - `echo hello world` becomes two arguments: `hello` and `world`
+
+While building a shell, the main thing to remember is that quotes affect parsing, not just display. A correct parser must remove the quote characters while keeping the inner content as one argument.
