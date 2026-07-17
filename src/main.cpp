@@ -30,7 +30,8 @@ vector<string> split(string s, char delimeter=' '){
 
 
 unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
-string curr_directory = current_path().string();
+string curr_directory  = getcwd(nullptr, 0); // posix function to get current directory.
+
 
 
 string program_find_in_path(string command){
@@ -124,21 +125,36 @@ void echo(vector<string>& args){
 
 
 void pwd(vector<string>& args){
-	char* cwd = getcwd(nullptr, 0); // posix function to get 
-
-	if (cwd) {
-		std::cout << cwd;
-		free(cwd);
-	} else {
-		perror("getcwd");
-}
+	cout << curr_directory;
 }
 
 
+
+void cd(vector<string>& args){
+	if(args.size()==0){
+		curr_directory = const_cast<char*>("");
+
+	}else if(args.size()>1){
+		cout << "cd: too many arguments";
+	}
+	else{
+		string path = args[0];
+		if(path[0]=='/'){ // absolute path
+			if(exists(path)){
+				curr_directory = path;
+			}
+			else {
+				cout << path << ": no such file or directory" << "\n";
+			}
+		}
+	}
+	cout << "\033[A"; // remove the last "\n"
+
+}
 
 
 // EXECUTION
-unordered_map<string, function<void(vector<string>&)>> commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}};
+unordered_map<string, function<void(vector<string>&)>> commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}};
 void execute_line(string& command, vector<string>& args){
 	if (commands.find(command)!=commands.end()){
 		commands[command](args); // execute that 
@@ -156,11 +172,16 @@ int main() {
 	string line;
 	
 	while(true){
-		cout << "$ ";
+		vector<string> commands_executed = {};
+
+		cout << curr_directory << "$ ";
 
 		if(!getline(cin, line)) break;
+		commands_executed.push_back(line);
 
-		
+
+		// parsing the line.
+
 		vector<string> tokens = split(line);
 		string command = tokens[0];
 		if (command.empty()) {
@@ -170,9 +191,9 @@ int main() {
 		vector<string> args(tokens.begin()+1, tokens.end());
 
 		if(command == "exit") break;
+
+
 		execute_line(command, args);
-
-
 		cout << "\n";
 
 	}
