@@ -29,7 +29,7 @@ vector<string> split(string s, char delimeter=' '){
 }
 
 
-unordered_set<string> builtins = {"echo", "exit", "type"};
+unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
 string curr_directory = current_path().string();
 
 
