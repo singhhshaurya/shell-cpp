@@ -13,6 +13,7 @@
 
 using namespace std;
 using namespace filesystem;
+
 vector<string> split(string s, char delimeter=' '){
 	vector<string> ans;
 	int ptr = 0; 
@@ -25,11 +26,12 @@ vector<string> split(string s, char delimeter=' '){
 	}
 	ans.push_back(s.substr(ptr, s.size()-ptr));
 	return ans;
-
 }
 
+
 unordered_set<string> builtins = {"echo", "exit", "type"};
-// string PATH = "/usr/bin:/usr/local/bin:/tmp/pig:/tmp/owl:/tmp/dog:";
+string curr_directory = current_path().string();
+
 
 string program_find_in_path(string command){
 	string PATH = getenv("PATH"); // gets path from environment.
@@ -87,11 +89,12 @@ void execute_program(string& program, vector<string>& args){
 }
 
 
-
+	
 bool invalid_command(string s){
 	return builtins.find(s) == builtins.end();
 }
 
+// BUILTIN COMMANDS
 
 int type(vector<string>& args){
 	// check if its builtin
@@ -120,8 +123,21 @@ void echo(vector<string>& args){
 }
 
 
+void pwd(vector<string>& args){
+	char* cwd = getcwd(nullptr, 0); // posix function to get 
+
+	if (cwd) {
+		std::cout << cwd << '\n';
+		free(cwd);
+	} else {
+		perror("getcwd");
+}
+}
 
 
+
+
+// EXECUTION
 unordered_map<string, function<void(vector<string>&)>> commands = {{"echo", echo}, {"type", type}};
 void execute_line(string& command, vector<string>& args){
 	if (commands.find(command)!=commands.end()){
@@ -130,8 +146,6 @@ void execute_line(string& command, vector<string>& args){
 		execute_program(command, args);
 	}
 }
-
-
 
 
 int main() {

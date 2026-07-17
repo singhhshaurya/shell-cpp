@@ -52,3 +52,19 @@ int main() {
 - Used when you need to pass a string to a function that expects a C-style string (char*), such as many functions in the C standard library.
 
 - vector<char*> can also be converted to char*[] using data() method of vector. This is useful when you need to pass an array of C-style strings to a function that expects char*[].
+
+
+## POSIX 
+- POSIX (Portable Operating System Interface) is a family of standards specified by the IEEE for maintaining compatibility between operating systems. POSIX defines the application programming interface (API), along with command line shells and utility interfaces, for software compatibility with variants of Unix and other operating systems.
+- Important POSIX functions for C++ programming include:
+  - fork(): creates a new process by duplicating the calling process.
+  - exec(): replaces the current process image with a new process image.
+  - wait(): suspends execution of the calling process until one of its child processes terminates.
+  - pipe(): creates a unidirectional data channel that can be used for interprocess communication.
+  - signal(): sets a function to handle signals (asynchronous events) sent to the process.
+  - cwd(): gets the current working directory of the process.
+
+
+  #include <unistd.h> for POSIX functions like fork(), exec(), wait(), pipe(), and cwd().
+
+  
