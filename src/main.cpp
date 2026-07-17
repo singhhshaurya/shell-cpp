@@ -122,13 +122,14 @@ int type(vector<string>& args){
 
 
 void echo(vector<string>& args){
-	bool single_quotes_closed = 0;
-	bool double_quotes_closed = 0;
+	bool single_quotes_closed = 1;
+	bool double_quotes_closed = 1;
 
 	for(int i=0; i<args.size(); i++){
+		if(args[i] == "" && single_quotes_closed) continue; 
 		for(char j:args[i]){
 			if(j == '\'') single_quotes_closed = !single_quotes_closed;
-			else if(j=='"') double_quotes_closed = !double_quotes_closed;
+			else if(j=='\"') double_quotes_closed = !double_quotes_closed;
 			else cout << j;
 		}
 		cout << " ";
