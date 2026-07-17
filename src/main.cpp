@@ -28,6 +28,27 @@ vector<string> split(string s, char delimeter=' '){
 	return ans;
 }
 
+vector<string> get_args(string& command){
+	bool single_quotes_closed = 1;
+	bool double_quotes_closed = 1;
+	vector<string> args;
+
+	string curr;
+	for(char c:command){
+		if(c=='\'') single_quotes_closed = !single_quotes_closed;
+		else if(c=='\"') double_quotes_closed = !double_quotes_closed;
+		else if(c == ' ' && single_quotes_closed && double_quotes_closed){
+			if(curr != "") args.push_back(curr);
+			curr = "";
+		}
+		else curr += c;
+
+	}
+	args.push_back(curr);
+	return args;
+
+}
+
 
 unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
 path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory.
@@ -122,17 +143,8 @@ int type(vector<string>& args){
 
 
 void echo(vector<string>& args){
-	bool single_quotes_closed = 1;
-	bool double_quotes_closed = 1;
-
-	for(int i=0; i<args.size(); i++){
-		if(args[i] == "" && single_quotes_closed) continue; 
-		for(char j:args[i]){
-			if(j == '\'') single_quotes_closed = !single_quotes_closed;
-			else if(j=='\"') double_quotes_closed = !double_quotes_closed;
-			else cout << j;
-		}
-		cout << " ";
+	for(string s:args){
+		cout << s  <<  " ";
 	} 
 	cout << "\b";
 }
@@ -226,7 +238,7 @@ int main() {
 
 		// parsing the line.
 
-		vector<string> tokens = split(line);
+		vector<string> tokens = get_args(line);
 		string command = tokens[0];
 		if (command.empty()) {
 			continue;
