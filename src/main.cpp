@@ -127,7 +127,7 @@ void pwd(vector<string>& args){
 	char* cwd = getcwd(nullptr, 0); // posix function to get 
 
 	if (cwd) {
-		std::cout << cwd << '\n';
+		std::cout << cwd;
 		free(cwd);
 	} else {
 		perror("getcwd");
@@ -138,7 +138,7 @@ void pwd(vector<string>& args){
 
 
 // EXECUTION
-unordered_map<string, function<void(vector<string>&)>> commands = {{"echo", echo}, {"type", type}};
+unordered_map<string, function<void(vector<string>&)>> commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}};
 void execute_line(string& command, vector<string>& args){
 	if (commands.find(command)!=commands.end()){
 		commands[command](args); // execute that 
