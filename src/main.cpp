@@ -31,11 +31,17 @@ vector<string> split(string s, char delimeter=' '){
 vector<string> get_args(string& command){
 	bool single_quotes_closed = 1;
 	bool double_quotes_closed = 1;
+	bool back_slash = 0;
 	vector<string> args;
 
 	string curr;
 	for(char c:command){
-		if(c=='\'' && double_quotes_closed) single_quotes_closed = !single_quotes_closed;
+		if(back_slash){ 
+			curr += c;
+			back_slash = 0;
+		}
+		else if(c == '\\') back_slash = 1;
+		else if(c=='\'' && double_quotes_closed) single_quotes_closed = !single_quotes_closed;
 		else if(c=='\"' && single_quotes_closed) double_quotes_closed = !double_quotes_closed;
 		else if(c == ' ' && single_quotes_closed && double_quotes_closed){
 			if(curr != "") args.push_back(curr);
