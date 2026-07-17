@@ -32,7 +32,10 @@ vector<string> split(string s, char delimeter=' '){
 unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
 path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory.
 
-
+string get_directory(){
+	if(curr_directory == "" or curr_directory == "/") return getenv("HOME");
+	return curr_directory;
+}
 
 string program_find_in_path(string command){
 	string PATH = getenv("PATH"); // gets path from environment.
@@ -125,7 +128,10 @@ void echo(vector<string>& args){
 
 
 void pwd(vector<string>& args){
-	cout << curr_directory.string();
+	if(curr_directory == "" or curr_directory == "/"){
+		cout << getenv("HOME");
+	}
+	else cout << curr_directory.string();
 }
 
 
@@ -157,6 +163,10 @@ void cd(vector<string>& args){
 				else if(folder == ".." && temp_curr_directory.has_parent_path()) {
 					temp_curr_directory = temp_curr_directory.parent_path();
 				}
+				else if(folder == "~"){
+					temp_curr_directory = "";
+
+				}
 				else{
 					if(exists(temp_curr_directory / folder)) temp_curr_directory = temp_curr_directory / folder;
 					else{
@@ -175,7 +185,9 @@ void cd(vector<string>& args){
 
 
 // EXECUTION
+
 unordered_map<string, function<void(vector<string>&)>> commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}};
+
 void execute_line(string& command, vector<string>& args){
 	if (commands.find(command)!=commands.end()){
 		commands[command](args); // execute that 
@@ -195,7 +207,7 @@ int main() {
 	while(true){
 		vector<string> commands_executed = {};
 
-		// cout << curr_directory.string() << "$ ";
+		// cout << get_directory() << "$ ";
 		cout << "$ ";
 		if(!getline(cin, line)) break;
 		commands_executed.push_back(line);
