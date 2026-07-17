@@ -37,10 +37,10 @@ vector<string> get_args(string& command){
 	string curr;
 	for(char c:command){
 		if(back_slash){ 
-			curr += c;
+			curr += c; // no special meaning just add that shi
 			back_slash = 0;
 		}
-		else if(c == '\\') back_slash = 1;
+		else if(c == '\\' && single_quotes_closed && double_quotes_closed) back_slash = 1;
 		else if(c=='\'' && double_quotes_closed) single_quotes_closed = !single_quotes_closed;
 		else if(c=='\"' && single_quotes_closed) double_quotes_closed = !double_quotes_closed;
 		else if(c == ' ' && single_quotes_closed && double_quotes_closed){
