@@ -25,6 +25,16 @@ $PATH → append whatever directories were already in your PATH.
 
 
 $
+# WORKING DIRECTORY
+- The working directory is the current directory in which a process is running. 
+
+- The OS keeps track of the working directory for each process, and it is used as the default location for file operations (like opening files) when a relative path is specified.
+
+- The working directory can be changed using the chdir() system call in C/C++ or the cd command in a shell. When you change the working directory, it affects the current process and any child processes that are created after the change.
+
+- However, it does not affect the working directory of the parent process or other unrelated processes. Each process maintains its own working directory, and changes to the working directory are local to that process and its children.
+
+
 # Program Execution
 - When you enter a command in the shell, it creates a new process to execute that command. The shell uses the fork() system call to create a new process, and then the exec() system call to replace the new process's memory space with the program being executed.
 
@@ -197,6 +207,100 @@ Standard Output (stdout) and Standard Error (stderr) are two separate output str
 - &>> operator:
   - Redirects both stdout and stderr to a file, appending to the file if it exists.
   - Example: `ls >> output.txt 2>&1` appends both the output and error messages to `output.txt`, preserving its existing contents.
+
+
+## UNIX FILE DESCRIPTORS
+- In Unix-like operating systems, almost everything is treated as a file. Regular files, directories, sockets, terminals, pipes, socket connections, and even hardware devices are represented as files.
+
+- Each file is associated with a file descriptor, which is a non-negative integer that uniquely identifies the file within a process.
+- FILE DESCRIPTORS are just a small integer that identifies an open file or device.
+
+
+- When any program starts, the operating system automatically gives it three file descriptors.
+
+Descriptor     Meaning          Default (can be changed.)
+----------------------------------------
+0              stdin            Keyboard
+1              stdout           Terminal
+2              stderr           Terminal
+
+STDIN_FILENO   = 0
+STDOUT_FILENO  = 1
+STDERR_FILENO  = 2
+
+```cpp
+std::cout << "Hello";
+
+// internally, it becomes:
+write(1, "Hello", 5); // 1 is the file descriptor for stdout. 5 is the number of bytes to write.
+
+// 1 means write to descriptor 1, which is assigned to the terminal.
+```
+
+### Opening another file.
+- When we open a new file in a program, the operating system assigns it a new file descriptor. The first available file descriptor is usually 3, since 0, 1, and 2 are already taken by stdin, stdout, and stderr.
+
+```cpp
+int fd = open("out.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+```
+
+Here fd = 3, which is file descriptor for out.txt. 
+
+Now the process looks like
+
+0 ---> Keyboard
+1 ---> Terminal (stdout)
+2 ---> Terminal (stderr)
+3 ---> out.txt
+
+
+## CHANGING DEFAULT FILE DESCRIPTORS of COUT AND CIN
+- We can change the default file descriptors for stdout and stderr using the dup2() system call.
+- By default, stdout (file descriptor 1) and stderr (file descriptor 2) point to the terminal. We can redirect them to a file or another output stream.
+
+```cpp
+dup2(3, 1);
+```
+Means "Make descriptor 1 refer to whatever descriptor 3 refers to."
+Therefore, now file descriptor 1 (stdout) points to out.txt instead of the terminal. Any output sent to stdout will now go to out.txt.
+
+
+
+### EXAMPLE CODE AND EXPLANATION
+```cpp
+#include <fcntl.h> // for open() and O_WRONLY, O_CREAT, O_TRUNC.
+#include <unistd.h>
+
+int fd = open("out.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+dup2(fd, STDOUT_FILENO);   // stdout now goes to out.txt
+close(fd);
+
+execvp(argv[0], argv);
+```
+
+1. `open("out.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);`
+   - Opens the file "out.txt" for writing. If it doesn't exist, it creates it. 
+   - O_WRONLY: Open for writing only. It is a flag that specifies the access mode for the file. 
+   - O_CREAT: Create the file if it doesn't exist.
+   - O_TRUNC: If the file already exists, truncate it to zero length (i.e., clear its contents).
+  - 0644: File permissions (owner can read/write, group can read, others can read).
+
+   - Returns a file descriptor (fd) for the opened file.
+
+
+2. `dup2(fd, STDOUT_FILENO);`
+   - Duplicates the file descriptor `fd` (which points to "out.txt") onto `STDOUT_FILENO` (which is 1, the standard output).
+   - After this call, any output sent to stdout in this process (like using `std::cout`) will go to "out.txt" instead of the terminal.
+
+
+3. `close(fd);`
+   - Closes the original file descriptor `fd`. After this, `fd` is no longer valid, but stdout (file descriptor 1) still points to "out.txt" because of the previous `dup2` call.
+
+4. `execvp(argv[0], argv);`
+    - Replaces the current process with a new process specified by `argv[0]` (the command to execute) and `argv` (the arguments for that command).
+    - After this call, the current process is replaced by the new program, and it will inherit the modified stdout (which now points to "out.txt").
+    - stout for this process also has been redirected to "out.txt", so any output from the new program will go to that file instead of the terminal.
+    - When child process terminates, parent process still has stdout pointing to terminal, because dup2() only affects the current process and its children, not the parent process.
 
 
   

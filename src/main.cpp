@@ -6,10 +6,13 @@
 #include <unordered_map>
 #include <functional>
 #include <unordered_set>
-#include <filesystem>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fstream>
+
+#include <filesystem> // directories, navigation, opening files and programs.
+#include <unistd.h> // standard posix functions.
+#include <sys/wait.h> // wait process
+#include <fstream> // for normal writing and reading in a file.
+#include <fcntl.h> // for open(), file descriptor changing.
+
 
 
 using namespace std;
@@ -28,6 +31,7 @@ vector<string> split(string s, char delimeter=' '){
 	ans.push_back(s.substr(ptr, s.size()-ptr));
 	return ans;
 }
+
 
 vector<string> get_args(string& command){
 	bool single_quotes_closed = 1;
@@ -68,7 +72,7 @@ const string remove_line = "\033[A";
 const string backspace = "\b";
 
 unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
-path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory.
+path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory. use chdir() to change it. 
 
 
 string get_directory(){
@@ -102,10 +106,22 @@ void execute_program(string& program, vector<string>& args){
 	string path = program_find_in_path(program);
 
 	vector<char*> argv = {program.data()};
+
+	string output_path;
+	int output = 0;
+
 	for(int i=0; i<args.size(); i++){
-		argv.push_back(args[i].data());
+		if(args[i] == ">" || args[i] == "1>") {
+			output = 1;
+			continue;
+		}
+
+		if(output) output_path += args[i];
+		else argv.push_back(args[i].data());
 	}
 	argv.push_back(nullptr);
+
+	// executing the program.
 
 	if(path!="" && is_executable(path)) {
 		pid_t pid = fork();
@@ -114,7 +130,14 @@ void execute_program(string& program, vector<string>& args){
 
 		} else if (pid == 0) {
 			// child process
+			if(output){
+				int fd = open(output_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
+				close(fd);
+			}
+
 			execv(path.data(), argv.data());
+
 			perror("execv"); // execv() failed
 			exit(1); // exit child process with error code
 
@@ -122,8 +145,6 @@ void execute_program(string& program, vector<string>& args){
 			// parent process
 			waitpid(pid, nullptr, 0);
 			cout << "\033[A";
-
-
 		}
 
 	}
@@ -166,7 +187,7 @@ void echo(vector<string>& args){
 	bool add_to_output = 0;
 
 	for(string s:args){
-		if(s == ">") {
+		if(s == ">" or s == "1>") {
 			add_to_output = 1;
 			continue;
 		}
@@ -176,7 +197,7 @@ void echo(vector<string>& args){
 			output += s + " ";
 		}
 	} 
-	
+
 	if(output_file != ""){
 		ofstream file(output_file);
 		file << output;
@@ -237,6 +258,7 @@ void cd(vector<string>& args){
 				}
 			}
 			curr_directory = temp_curr_directory;
+			chdir(curr_directory.string().data()); // changes the current working directory of the process to the new directory.
 
 		}
 	}
