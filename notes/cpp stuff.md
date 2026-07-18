@@ -140,3 +140,53 @@ int main() {
 `\033[35m` Magenta
 `\033[36m`  Cyan
 `\033[37m` White
+
+
+## WRITE AND READ IN FILES IN CPP - FSTREAM HEADER.
+- For writing, use ofstream and for reading use ifstream. 
+- ofstream and ifstream are classes provided by the fstream header in C++ for file handling. ofstream is used to create and write to files, while ifstream is used to read from files.
+
+1. WRITE
+```cpp
+#include <iostream>
+#include <fstream>
+int main() {
+    ofstream file("data.txt");
+
+    file << "Hello, File!" << endl;
+    file << "C++ File Handling";
+
+    file.close();
+    return 0;
+}
+```
+
+
+2. READ
+```cpp
+#include <iostream>
+#include <fstream>
+int main() {
+    ifstream file("data.txt");
+
+    string line;
+    while (getline(file, line)) { // stores each line in the variable 'line'. 
+        cout << line << endl;
+    }
+
+    file.close();
+    return 0;
+}
+
+
+| Python | C++                                                                             |
+| ------ | ------------------------------------------------------------------------------- |
+| `"r"`  | `std::ifstream file("f.txt");`                                                  |
+| `"w"`  | `std::ofstream file("f.txt");`                                                  |
+| `"a"`  | `std::ofstream file("f.txt", std::ios::app);`                                   |
+| `"r+"` | `std::fstream file("f.txt", std::ios::in \| std::ios::out);`                    |
+| `"w+"` | `std::fstream file("f.txt", std::ios::in \| std::ios::out \| std::ios::trunc);` |
+| `"a+"` | `std::fstream file("f.txt", std::ios::in \| std::ios::out \| std::ios::app);`   |
+```
+
+

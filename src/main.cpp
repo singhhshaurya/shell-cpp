@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fstream>
 
 
 using namespace std;
@@ -63,9 +64,12 @@ vector<string> get_args(string& command){
 
 }
 
+const string remove_line = "\033[A";
+const string backspace = "\b";
 
 unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
 path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory.
+
 
 string get_directory(){
 	if(curr_directory == "" or curr_directory == "/") return getenv("HOME");
@@ -157,10 +161,30 @@ int type(vector<string>& args){
 
 
 void echo(vector<string>& args){
+	string output_file;
+	string output;
+	bool add_to_output = 0;
+
 	for(string s:args){
-		cout << s  <<  " ";
+		if(s == ">") {
+			add_to_output = 1;
+			continue;
+		}
+
+		if(add_to_output) output_file += s;
+		else{
+			output += s + " ";
+		}
 	} 
-	cout << "\b";
+	
+	if(output_file != ""){
+		ofstream file(output_file);
+		file << output;
+		cout << remove_line;
+
+	}else{
+		cout << output << backspace;
+	}
 }
 
 

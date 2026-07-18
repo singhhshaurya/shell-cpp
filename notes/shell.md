@@ -166,3 +166,37 @@ These matter because a shell must decide how to parse input before executing a c
   - `echo hello world` becomes two arguments: `hello` and `world`
 
 While building a shell, the main thing to remember is that quotes affect parsing, not just display. A correct parser must remove the quote characters while keeping the inner content as one argument.
+
+
+## STDOUT AND STDERR
+Standard Output (stdout) and Standard Error (stderr) are two separate output streams used by operating systems and programming languages.
+
+| Feature                       | Standard Output (stdout)       | Standard Error (stderr)                 |
+| ----------------------------- | ------------------------------ | --------------------------------------- |
+| Purpose                       | Displays normal program output | Displays error messages and diagnostics |
+| Default destination           | Terminal/console               | Terminal/console                        |
+| File descriptor (Unix/Linux)  | 1                              | 2                                       |
+| Can be redirected separately? | Yes                            | Yes                                     |
+
+
+- > operator: 
+  - Redirects stdout to a file, overwriting the file if it exists.
+  - Example: `ls > output.txt` writes the output of `ls` to `output.txt`, replacing its contents.
+- >> operator:
+  - Redirects stdout to a file, appending to the file if it exists.
+  - Example: `ls >> output.txt` appends the output of `ls` to `output.txt`, preserving its existing contents.
+- 2> operator:
+  - Redirects stderr to a file, overwriting the file if it exists.
+  - Example: `ls non_existent_file 2> error.txt` writes the error message to `error.txt`, replacing its contents.
+- 2>> operator:
+  - Redirects stderr to a file, appending to the file if it exists.
+  - Example: `ls non_existent_file 2>> error.txt` appends the error message to `error.txt`, preserving its existing contents.
+- &> operator:
+  - Redirects both stdout and stderr to a file, overwriting the file if it exists.
+  - Example: `ls > output.txt 2>&1` writes both the output and error messages to `output.txt`, replacing its contents.
+- &>> operator:
+  - Redirects both stdout and stderr to a file, appending to the file if it exists.
+  - Example: `ls >> output.txt 2>&1` appends both the output and error messages to `output.txt`, preserving its existing contents.
+
+
+  
