@@ -63,7 +63,7 @@ vector<string> get_args(string& command){
 
 			if(curr == "1" || curr == "2") args.push_back(curr+">");
 			else{
-				args.push_back(curr);
+				if(curr!="") args.push_back(curr);
 				args.push_back(">");
 			}
 			curr = "";
@@ -119,7 +119,6 @@ bool is_executable(string path){
 
 void execute_program(string& program, vector<string>& args){
 	string path = program_find_in_path(program);
-
 	vector<char*> argv = {program.data()};
 
 	string output_path;
