@@ -1,13 +1,1 @@
-CMakeLists.txt
-README.md
-codecrafters.yml
-fsatweafs
-main
-notes
-out.txt
-output.txt
-output2.txt
-src
-vcpkg-configuration.json
-vcpkg.json
-your_program.sh
+afas 

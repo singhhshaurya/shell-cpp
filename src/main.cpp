@@ -37,6 +37,7 @@ vector<string> get_args(string& command){
 	bool single_quotes_closed = 1;
 	bool double_quotes_closed = 1;
 	bool back_slash = 0;
+	bool arrow = 0;
 	vector<string> args;
 
 	string curr;
@@ -54,6 +55,20 @@ vector<string> get_args(string& command){
 		else if(c=='\"' && single_quotes_closed) double_quotes_closed = !double_quotes_closed;
 
 		// space
+		else if (c == '>'){
+			if(arrow){
+				args.back()+='>';
+				arrow = 0;
+			}
+
+			if(curr == "1" || curr == "2") args.push_back(curr+">");
+			else{
+				args.push_back(curr);
+				args.push_back(">");
+			}
+			curr = "";
+			arrow = 1;
+		}
 		else if(c == ' ' && single_quotes_closed && double_quotes_closed){
 			if(curr != "") args.push_back(curr);
 			curr = "";
@@ -130,7 +145,7 @@ void execute_program(string& program, vector<string>& args){
 
 		} else if (pid == 0) {
 			// child process
-			if(output){
+			if(output){ // put stout to file not termninal.
 				int fd = open(output_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
 				close(fd);
