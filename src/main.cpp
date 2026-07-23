@@ -33,6 +33,7 @@ vector<string> split(string s, char delimeter=' '){
 }
 
 
+
 vector<string> get_args(string& command){
 	bool single_quotes_closed = 1;
 	bool double_quotes_closed = 1;
@@ -148,6 +149,7 @@ void execute_program(string& program, vector<string>& args){
 				int fd = open(output_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
 				close(fd);
+				cout << remove_line;
 			}
 
 			execv(path.data(), argv.data());
@@ -156,9 +158,9 @@ void execute_program(string& program, vector<string>& args){
 			exit(1); // exit child process with error code
 
 		} else {
-			// parent process
+			// parent processrun
 			waitpid(pid, nullptr, 0);
-			cout << "\033[A";
+			// cout << remove_line;
 		}
 
 	}
