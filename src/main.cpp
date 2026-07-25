@@ -13,83 +13,21 @@
 #include <fstream> // for normal writing and reading in a file.
 #include <fcntl.h> // for open(), file descriptor changing.
 
+#include "helping_functions.h"
+
 
 
 using namespace std;
 using namespace filesystem;
 
-vector<string> split(string s, char delimeter=' '){
-	vector<string> ans;
-	int ptr = 0; 
-
-	for(int i=0; i<s.size(); i++){
-		if(s[i]==delimeter){
-			ans.push_back(s.substr(ptr, i-ptr));
-			ptr = i+1;
-		}	
-	}
-	ans.push_back(s.substr(ptr, s.size()-ptr));
-	return ans;
-}
 
 
-
-vector<string> get_args(string& command){
-	bool single_quotes_closed = 1;
-	bool double_quotes_closed = 1;
-	bool back_slash = 0;
-	bool arrow = 0;
-	vector<string> args;
-
-	string curr;
-	for(char c:command){
-		if(back_slash){ 
-			curr += c; // no special meaning just add that shi
-			back_slash = 0;
-		}
-		// backslashes
-		else if(c == '\\' && single_quotes_closed) back_slash = 1;
-		
-
-		// quotation marks
-		else if(c=='\'' && double_quotes_closed) single_quotes_closed = !single_quotes_closed;
-		else if(c=='\"' && single_quotes_closed) double_quotes_closed = !double_quotes_closed;
-
-		// space
-		else if (c == '>'){
-			if(arrow){
-				args.back()+='>';
-				arrow = 0;
-			}
-
-			if(curr == "1" || curr == "2") args.push_back(curr+">");
-			else{
-				if(curr!="") args.push_back(curr);
-				args.push_back(">");
-			}
-			curr = "";
-			arrow = 1;
-		}
-		else if(c == ' ' && single_quotes_closed && double_quotes_closed){
-			if(curr != "") args.push_back(curr);
-			curr = "";
-		}
-
-
-		else curr += c;
-
-	}
-	args.push_back(curr);
-	return args;
-}
 
 const string remove_line = "\033[A";
 const string backspace = "\b";
 
 unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
 path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory. use chdir() to change it. 
-
-
 
 
 string get_directory(){
@@ -126,13 +64,23 @@ void execute_program(string& program, vector<string>& args){
 	string output_path;
 	int output = 0;
 
+	string error_path;
+	int error = 0;
+
 	for(int i=0; i<args.size(); i++){
 		if(args[i] == ">" || args[i] == "1>") {
 			output = 1;
+			error = 0;
+			continue;
+		}
+		if(args[i] == "2>"){
+			error = 1;
+			output = 0;
 			continue;
 		}
 
 		if(output) output_path += args[i];
+		else if(error) error_path += args[i];
 		else argv.push_back(args[i].data());
 	}
 	argv.push_back(nullptr);
@@ -150,7 +98,11 @@ void execute_program(string& program, vector<string>& args){
 				int fd = open(output_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
 				close(fd);
-				// cout << remove_line;
+			}
+			if(error){
+				int fd = open(error_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				dup2(fd, STDERR_FILENO);
+				close(fd);
 			}
 
 			execv(path.data(), argv.data());
@@ -331,27 +283,10 @@ int main() {
 
 		if(command == "exit") break;
 
-			
-		int pipefd[2];
-		pipe(pipefd);
-		dup2(pipefd[1], 1); // STDOUT_FILENO is basically 1.
-	execute_line(command, args);
-		dup2(TERMINAL_OUT, 1); // change stout back to terminal.
-		close(pipefd[1]);
-
-		char buffer[4096];
-		string output;
-		ssize_t n;
-
-		while ((n = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
-			output.append(buffer, n);
-		}
-		close(pipefd[0]);
-		
-		if(output!=""){
-			if(output.back() == '\n') cout << output;
-			else cout << output << "\n";
-		}
+		execute_line(command, args);
+		int row, col;
+		if (getCursorPosition(row, col) && col != 1)
+    		cout << '\n';
 
 	}
 }

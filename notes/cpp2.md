@@ -1,3 +1,17 @@
+# IMPORTING FUNCTIONS FROM ANOTHER MODULE IN CPP
+- In C++, you can import functions from another module (or file) by using the `#include` directive to include the header file that contains the function declarations. The implementation of the functions should be in a separate source file (with a .cpp extension).
+
+- 1. Create a header file (e.g., `my_functions.h`) that contains the function declarations.
+- 2. Create a source file (e.g., `my_functions.cpp`) that contains the function definitions (implementations).
+- 3. In your main program file (e.g., `main.cpp`), include the header file using `#include "my_functions.h"` and call the functions as needed.
+
+- #pragma once --> This is a preprocessor directive that prevents the header file from being included multiple times in the same compilation unit.
+
+
+
+
+
+
 # PIPE
 - pipe() is one of the simplest inter-process communication (IPC) mechanisms in Unix.
 - A pipe is a kernel-managed byte buffer with two ends:
