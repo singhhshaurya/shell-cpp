@@ -155,13 +155,23 @@ void echo(vector<string>& args){
 	string output;
 	bool add_to_output = 0;
 
+	string error_file;
+	int error = 0;
+
 	for(string s:args){
 		if(s == ">" or s == "1>") {
 			add_to_output = 1;
+			error = 0;
+			continue;
+		}
+		if(s == "2>"){
+			error = 1;
+			add_to_output = 0;
 			continue;
 		}
 
 		if(add_to_output) output_file += s;
+		else if(error) error_file += s;
 		else{
 			output += s + " ";
 		}
@@ -171,8 +181,8 @@ void echo(vector<string>& args){
 		ofstream file(output_file); // ofstream is used to write to a file. if the file doesn't exist it will create it. 
 		file << output;
 		// cout << remove_line;
-
-	}else{
+	}
+	else{
 		cout << output << backspace;
 	}
 }
