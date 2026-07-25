@@ -308,8 +308,6 @@ int main() {
 	int TERMINAL_OUT = dup(STDOUT_FILENO);
 	int TERMINAL_IN = dup(STDIN_FILENO);
 
-	int pipefd[2];
-	pipe(pipefd);
 	
 	while(true){
 		vector<string> commands_executed = {};
@@ -333,20 +331,26 @@ int main() {
 
 		if(command == "exit") break;
 
-		// dup2(pipefd[1], 1); // STDOUT_FILENO is basically 1.
+			
+		int pipefd[2];
+		pipe(pipefd);
+		dup2(pipefd[1], 1); // STDOUT_FILENO is basically 1.
 		execute_line(command, args);
-		// dup2(TERMINAL_OUT, 1); // change stout back to terminal.
+		dup2(TERMINAL_OUT, 1); // change stout back to terminal.
+		close(pipefd[1]);
 
-		// char buffer[4096];
-		// string output;
-		// ssize_t n;
+		char buffer[4096];
+		string output;
+		ssize_t n;
 
-		// while ((n = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
-		// 	output.append(buffer, n);
-		// }
-		// if(output!=""){
-		// 	cout << output << "\n";
-		// }
+		while ((n = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
+			output.append(buffer, n);
+		}
+		close(pipefd[0]);
+		
+		if(output!=""){
+			cout << output << "\n";
+		}
 
 	}
 }
