@@ -275,7 +275,7 @@ int main() {
 		vector<string> commands_executed = {};
 
 		// cout << get_directory() << "$ ";
-		cout << "$ ";
+		cout << "$ " << flush;
 
 		if(!getline(cin, line)) break;
 		commands_executed.push_back(line);
