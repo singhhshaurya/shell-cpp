@@ -279,7 +279,7 @@ void cd(vector<string>& args){
 
 		}
 	}
-	cout << "\033[A"; // remove the last "\n"
+	cout << remove_line; // remove the last "\n"
 
 }
 
@@ -335,7 +335,7 @@ int main() {
 		int pipefd[2];
 		pipe(pipefd);
 		dup2(pipefd[1], 1); // STDOUT_FILENO is basically 1.
-		execute_line(command, args);
+	execute_line(command, args);
 		dup2(TERMINAL_OUT, 1); // change stout back to terminal.
 		close(pipefd[1]);
 
@@ -349,7 +349,8 @@ int main() {
 		close(pipefd[0]);
 		
 		if(output!=""){
-			cout << output << "\n";
+			if(output.back() == '\n') cout << output;
+			else cout << output << "\n";
 		}
 
 	}
