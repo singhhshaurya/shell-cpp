@@ -28,6 +28,7 @@ vector<string> split(string s, char delimeter=' '){
 
 
 int main(){
-    vector<string> strings = split("razor      beglaustever");
-    for(string s:strings ) cout << s << "\n";
+	cout << "razor";
+	cout << "\033[6n" << flush;
+
 }

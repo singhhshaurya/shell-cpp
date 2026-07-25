@@ -145,8 +145,10 @@ int main() {
 ## WRITE AND READ IN FILES IN CPP - FSTREAM HEADER.
 - For writing, use ofstream and for reading use ifstream. 
 - ofstream and ifstream are classes provided by the fstream header in C++ for file handling. ofstream is used to create and write to files, while ifstream is used to read from files.
+- Can also use write() and read() POSIX functions with file descriptors to write and read from files. These functions are lower-level and provide more control over file operations, but they require more manual management of file descriptors and buffers.
 
-1. WRITE
+
+1. WRITE - METHOD 1 FSTREAM.
 ```cpp
 #include <iostream>
 #include <fstream>
@@ -161,8 +163,21 @@ int main() {
 }
 ```
 
+2. WRITE - METHOD 2 write() function.
+```cpp
+#include <fcntl.h>
+#include <unistd.h>
+int main() {
+    int fd = open("out.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644); // open using file descriptor. 
 
-2. READ
+    write(fd, "Hello\n", 6);
+
+    close(fd);
+}
+```
+
+
+3. READ - FSTREAM.
 ```cpp
 #include <iostream>
 #include <fstream>
@@ -177,6 +192,22 @@ int main() {
     file.close();
     return 0;
 }
+
+
+4. READ - read() function.
+```cpp
+#include <fcntl.h>
+#include <unistd.h>
+int main() {
+    int fd = open("out.txt", O_RDONLY); // open using file descriptor.
+    char buffer[1024];
+    ssize_t bytes_read;
+    while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
+        write(STDOUT_FILENO, buffer, bytes_read);
+    }
+    close(fd);
+}
+```
 
 
 | Python | C++                                                                             |

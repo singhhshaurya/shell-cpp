@@ -1,0 +1,73 @@
+# PIPE
+- pipe() is one of the simplest inter-process communication (IPC) mechanisms in Unix.
+- A pipe is a kernel-managed byte buffer with two ends:
+
+Read end — you can only read from it.
+Write end — you can only write to it.
+
+- Pipe is unidirectional, meaning data flows in one direction: from the write end to the read end. It is used for communication between processes, allowing one process to send data to another.
+- It is used in scenarios where you want to connect the output of one process to the input of another, enabling a form of communication between them.
+
+- In cpp, pipe() function from the POSIX library is used to create a pipe. It takes an array of two integers as an argument, which will hold the file descriptors for the read and write ends of the pipe.
+
+- WRITING: either use write() function, or change STOUT using dup2() to redirect the standard output to the write end of the pipe, and then use std::cout to write to the pipe. Can also use ofstream to write to the pipe.
+
+- READING: either use read() function, or change STDIN using dup2() to redirect the standard input to the read end of the pipe, and then use std::cin to read from the pipe. Can also use ifstream to read from the pipe.
+
+write end  ----->  kernel buffer  ----->  read end
+
+
+```cpp
+#include <unistd.h>
+
+int pipefd[2];
+pipe(pipefd);
+
+// pipefd[0] -> read end
+// pipefd[1] -> write end
+```
+- pipe() function allocates a pipe object in kernel memory, allocates an internal buffer, and returns two file descriptors: one for the read end (pipefd[0]) and one for the write end (pipefd[1]). 
+- These file descriptors can be used with read() and write() functions to communicate between processes.
+- Returns 0 on success, -1 on failure
+
+
+## WRITING IN PIPE
+1. Using write() function.
+```cpp
+#include <unistd.h>
+int pipefd[2];
+pipe(pipefd);
+write(pipefd[1], "Hello, Pipe!", 12); // write to the write end of the pipe
+``` 
+
+2. Using dup2() to redirect STDOUT to the write end of the pipe.
+```cpp
+#include <unistd.h>
+int pipefd[2];
+pipe(pipefd);
+dup2(pipefd[1], STDOUT_FILENO); // redirect STDOUT to the write end of the pipe
+std::cout << "Hello, Pipe!" << std::endl; // write to the pipe using std::cout
+``` 
+
+## READING FROM PIPE
+1. Using read() function.
+```cpp
+#include <unistd.h>
+int pipefd[2];
+pipe(pipefd);
+char buffer[128];
+read(pipefd[0], buffer, sizeof(buffer)); // read from the read end of the pipe
+std::cout << buffer << std::endl; // print the data read from the pipe
+``` 
+
+2. Using dup2() to redirect STDIN to the read end of the pipe.
+```cpp
+#include <unistd.h>
+int pipefd[2];
+pipe(pipefd);
+dup2(pipefd[0], STDIN_FILENO); // redirect STDIN to the read end of the pipe
+std::string input;
+std::cin >> input; // read from the pipe using std::cin
+std::cout << input << std::endl; // print the data read from the pipe
+```
+

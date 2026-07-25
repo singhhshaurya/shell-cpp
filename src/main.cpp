@@ -81,7 +81,6 @@ vector<string> get_args(string& command){
 	}
 	args.push_back(curr);
 	return args;
-
 }
 
 const string remove_line = "\033[A";
@@ -89,6 +88,8 @@ const string backspace = "\b";
 
 unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
 path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory. use chdir() to change it. 
+
+
 
 
 string get_directory(){
@@ -149,7 +150,7 @@ void execute_program(string& program, vector<string>& args){
 				int fd = open(output_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
 				close(fd);
-				cout << remove_line;
+				// cout << remove_line;
 			}
 
 			execv(path.data(), argv.data());
@@ -215,9 +216,9 @@ void echo(vector<string>& args){
 	} 
 
 	if(output_file != ""){
-		ofstream file(output_file);
+		ofstream file(output_file); // ofstream is used to write to a file. if the file doesn't exist it will create it. 
 		file << output;
-		cout << remove_line;
+		// cout << remove_line;
 
 	}else{
 		cout << output << backspace;
@@ -301,14 +302,21 @@ int main() {
 	cout << std::unitbuf;
 	cerr << std::unitbuf;
 
-	string line;
-	
 
+	string line;
+
+	int TERMINAL_OUT = dup(STDOUT_FILENO);
+	int TERMINAL_IN = dup(STDIN_FILENO);
+
+	int pipefd[2];
+	pipe(pipefd);
+	
 	while(true){
 		vector<string> commands_executed = {};
 
 		// cout << get_directory() << "$ ";
 		cout << "$ ";
+
 		if(!getline(cin, line)) break;
 		commands_executed.push_back(line);
 
@@ -325,9 +333,20 @@ int main() {
 
 		if(command == "exit") break;
 
-
+		// dup2(pipefd[1], 1); // STDOUT_FILENO is basically 1.
 		execute_line(command, args);
-		cout << "\n";
+		// dup2(TERMINAL_OUT, 1); // change stout back to terminal.
+
+		// char buffer[4096];
+		// string output;
+		// ssize_t n;
+
+		// while ((n = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
+		// 	output.append(buffer, n);
+		// }
+		// if(output!=""){
+		// 	cout << output << "\n";
+		// }
 
 	}
 }
