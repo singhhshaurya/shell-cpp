@@ -175,15 +175,14 @@ void echo(vector<string>& args){
 			output += s + " ";
 		}
 	} 
-
+	if(error){
+		int fd = open(error_file.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644); // just create the file for now.
+		close(fd);
+	}
 	if(output_file != ""){
 		ofstream file(output_file); // ofstream is used to write to a file. if the file doesn't exist it will create it. 
 		file << output;
 		// cout << remove_line;
-	}
-	if(error){
-		int fd = open(error_file.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644); // just create the file for now.
-		close(fd);
 	}
 	else{
 		cout << output << backspace << endl;
