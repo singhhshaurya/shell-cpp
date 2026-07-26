@@ -65,10 +65,13 @@ void execute_program(string& program, vector<string>& args){
 	string error_path;
 	int error = 0;
 
+	int append = 0;
+
 	for(int i=0; i<args.size(); i++){
-		if(args[i] == ">" || args[i] == "1>") {
+		if(args[i] == ">" || args[i] == "1>" || args[i] == "1>>" || args[i] == ">>") {
 			output = 1;
 			error = 0;
+			if(args[i] == "1>>" || args[i] == ">>") append = 1;
 			continue;
 		}
 		if(args[i] == "2>"){
@@ -93,7 +96,12 @@ void execute_program(string& program, vector<string>& args){
 		} else if (pid == 0) {
 			// child process
 			if(output){ // put stout to file not termninal.
-				int fd = open(output_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				int fd;
+				if(append){
+					fd = open(output_path.data(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+				}else{
+					fd = open(output_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				}
 				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
 				close(fd);
 			}
@@ -151,14 +159,16 @@ void echo(vector<string>& args){
 	string output_file;
 	string output;
 	bool add_to_output = 0;
+	bool append = 0;
 
 	string error_file;
 	int error = 0;
 
 	for(string s:args){
-		if(s == ">" or s == "1>") {
+		if(s == ">" or s == "1>" or s == ">>" or s == "1>>") {
 			add_to_output = 1;
 			error = 0;
+			if(s == ">>" or s == "1>>") append = 1;
 			continue;
 		}
 		if(s == "2>"){
@@ -178,9 +188,14 @@ void echo(vector<string>& args){
 		close(fd);
 	}
 	if(output_file != ""){
-		ofstream file(output_file); // ofstream is used to write to a file. if the file doesn't exist it will create it. 
-		file << output + "\n";
-		// cout << remove_line;
+		ofstream file;
+
+		if (append)
+			file.open(output_file, std::ios::app);
+		else
+			file.open(output_file);
+
+		file << output << '\n';
 	}
 	else{
 		cout << output << backspace << endl;

@@ -1,1 +1,1 @@
-who2 
+ls: cannot access 'nonevist': No such file or directory
