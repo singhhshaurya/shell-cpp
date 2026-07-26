@@ -21,8 +21,6 @@ using namespace std;
 using namespace filesystem;
 
 
-
-
 const string remove_line = "\033[A";
 const string backspace = "\b";
 
@@ -181,7 +179,7 @@ void echo(vector<string>& args){
 	}
 	if(output_file != ""){
 		ofstream file(output_file); // ofstream is used to write to a file. if the file doesn't exist it will create it. 
-		file << output;
+		file << output + "\n";
 		// cout << remove_line;
 	}
 	else{
