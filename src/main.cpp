@@ -113,11 +113,10 @@ void execute_program(string& program, vector<string>& args){
 		} else {
 			// parent processrun
 			waitpid(pid, nullptr, 0);
-			// cout << remove_line;
 		}
 
 	}
-	else cout << program << ": command not found";
+	else cout << program << ": command not found" << endl;
 
 }
 
@@ -133,7 +132,7 @@ int type(vector<string>& args){
 	// check if its builtin
 	string command = args[0];
 	if(builtins.find(command) != builtins.end()){
-		cout << command << " is a shell builtin";
+		cout << command << " is a shell builtin" << endl;
 		return 1;
 	}
 
@@ -141,11 +140,11 @@ int type(vector<string>& args){
 	// check if its in path and executable.
 	string path = program_find_in_path(command);
 	if(path != "" && is_executable(path)){
-		cout << command << " is " << path;
+		cout << command << " is " << path << endl;
 		return 1;
 	}
 
-	cout << command << ": not found";
+	cout << command << ": not found" << endl;
 	return 1;
 }
 
@@ -183,16 +182,17 @@ void echo(vector<string>& args){
 		// cout << remove_line;
 	}
 	else{
-		cout << output << backspace;
+		cout << output << backspace << endl;
 	}
 }
 
 
 void pwd(vector<string>& args){
 	if(curr_directory == "" or curr_directory == "/"){
-		cout << getenv("HOME");
+		cout << getenv("HOME") << endl;
 	}
-	else cout << curr_directory.string();
+	else cout << curr_directory.string() << endl;
+
 }
 
 
@@ -202,7 +202,7 @@ void cd(vector<string>& args){
 		curr_directory = const_cast<char*>("");
 
 	}else if(args.size()>1){
-		cout << "cd: too many arguments" << "\n";
+		cout << "cd: too many arguments" << endl;
 	}
 	else{
 		string path = args[0];
@@ -211,7 +211,7 @@ void cd(vector<string>& args){
 				curr_directory = path;
 			}
 			else {
-				cout << "cd: " << path << ": No such file or directory" << "\n";
+				cout << "cd: " << path << ": No such file or directory" << endl;
 			}
 		}
 		else{
@@ -231,7 +231,7 @@ void cd(vector<string>& args){
 				else{
 					if(exists(temp_curr_directory / folder)) temp_curr_directory = temp_curr_directory / folder;
 					else{
-						cout << "cd: " << path << ": No such file or directory" << "\n";
+						cout << "cd: " << path << ": No such file or directory" << endl;
 						break;
 					}
 				}
@@ -241,8 +241,6 @@ void cd(vector<string>& args){
 
 		}
 	}
-	cout << remove_line; // remove the last "\n"
-
 }
 
 
@@ -294,10 +292,6 @@ int main() {
 		if(command == "exit") break;
 
 		execute_line(command, args);
-		int row, col;
-		if (getCursorPosition(row, col) && col != 1)
-    		cout << '\n';
-
 	}
 }
 
