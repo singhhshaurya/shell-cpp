@@ -181,6 +181,10 @@ void echo(vector<string>& args){
 		file << output;
 		// cout << remove_line;
 	}
+	if(error){
+		int fd = open(error_file.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644); // just create the file for now.
+		close(fd);
+	}
 	else{
 		cout << output << backspace << endl;
 	}
