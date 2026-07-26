@@ -64,19 +64,28 @@ void execute_program(string& program, vector<string>& args){
 
 	string error_path;
 	int error = 0;
-
-	int append = 0;
+	int fd;
 
 	for(int i=0; i<args.size(); i++){
 		if(args[i] == ">" || args[i] == "1>" || args[i] == "1>>" || args[i] == ">>") {
+			if(output){
+				create_file(output_path, output-1);
+				output_path = "";
+			}
+
 			output = 1;
 			error = 0;
-			if(args[i] == "1>>" || args[i] == ">>") append = 1;
+			if(args[i] == "1>>" || args[i] == ">>") output = 2;
 			continue;
 		}
-		if(args[i] == "2>"){
+		if(args[i] == "2>" || args[i] == "2>>"){
+			if(error){
+				create_file(error_path, error-1);
+				error_path = "";
+			}
 			error = 1;
 			output = 0;
+			if(args[i] == "2>>") error = 2;
 			continue;
 		}
 
@@ -96,17 +105,16 @@ void execute_program(string& program, vector<string>& args){
 		} else if (pid == 0) {
 			// child process
 			if(output){ // put stout to file not termninal.
-				int fd;
-				if(append){
-					fd = open(output_path.data(), O_WRONLY | O_CREAT | O_APPEND, 0644);
-				}else{
-					fd = open(output_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-				}
+				output --;
+				int fd = create_file(output_path, output); // append me output = 2 tha. it will handle both > and >> .
 				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
 				close(fd);
 			}
+
 			if(error){
-				int fd = open(error_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				error --;
+				// int fd = open(error_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				int fd = create_file(error_path, error);
 				dup2(fd, STDERR_FILENO);
 				close(fd);
 			}
@@ -158,22 +166,32 @@ int type(vector<string>& args){
 void echo(vector<string>& args){
 	string output_file;
 	string output;
-	bool add_to_output = 0;
-	bool append = 0;
+	int add_to_output = 0;
 
 	string error_file;
 	int error = 0;
 
 	for(string s:args){
 		if(s == ">" or s == "1>" or s == ">>" or s == "1>>") {
+			if(add_to_output){
+				create_file(output_file, add_to_output-1);
+				output_file = "";
+			}
+			
 			add_to_output = 1;
 			error = 0;
-			if(s == ">>" or s == "1>>") append = 1;
+			if(s == ">>" or s == "1>>"){
+				add_to_output = 2;
+			}
 			continue;
 		}
-		if(s == "2>"){
+		if(s == "2>" or s == "2>>"){
+			if(error){
+				create_file(error_file, error-1);
+			}
 			error = 1;
 			add_to_output = 0;
+			if(s == "2>>") error = 2;
 			continue;
 		}
 
@@ -184,17 +202,17 @@ void echo(vector<string>& args){
 		}
 	} 
 	if(error){
-		int fd = open(error_file.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644); // just create the file for now.
+		int fd = create_file(error_file, error);
 		close(fd);
 	}
 	if(output_file != ""){
 		ofstream file;
 
-		if (append)
-			file.open(output_file, std::ios::app);
-		else
+		if (add_to_output == 2){
+			file.open(output_file, std::ios::app); // append.
+		}else{
 			file.open(output_file);
-
+		}		
 		file << output << '\n';
 	}
 	else{

@@ -12,47 +12,21 @@
 #include <sys/wait.h> // wait process
 #include <fstream> // for normal writing and reading in a file.
 #include <fcntl.h> // for open(), file descriptor changing.
-#include <termios.h>
-#include <cstdio>
 
 
 using namespace std;
 using namespace filesystem;
 
-bool getCursorPosition(int &row, int &col)
-{
-    termios oldt, raw;
 
-    if (tcgetattr(STDIN_FILENO, &oldt) == -1)
-        return false;
-
-    raw = oldt;
-    raw.c_lflag &= ~(ICANON | ECHO);
-
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &raw) == -1)
-        return false;
-
-    // Ask terminal for cursor position
-    cout << "\033[6n" << std::flush;
-
-    char buf[32];
-    int i = 0;
-
-    while (i < (int)sizeof(buf) - 1) {
-        if (read(STDIN_FILENO, &buf[i], 1) != 1)
-            break;
-
-        if (buf[i] == 'R')
-            break;
-
-        ++i;
+int create_file(string path, int append = 0){
+    int fd;
+    if(append){
+        fd = open(path.data(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+    }else{
+        fd = open(path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     }
 
-    buf[++i] = '\0';
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-
-    return sscanf(buf, "\033[%d;%dR", &row, &col) == 2;
+    return fd;
 }
 
 vector<string> split(string s, char delimeter=' '){
@@ -95,6 +69,7 @@ vector<string> get_args(string& command){
 			if(arrow){
 				args.back()+='>';
 				arrow = 0;
+                continue;
 			}
 
 			if(curr == "1" || curr == "2") args.push_back(curr+">");
