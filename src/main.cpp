@@ -99,11 +99,11 @@ void execute_program(string& program, vector<string>& args){
 				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
 				close(fd);
 			}
-			if(error){
-				int fd = open(error_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-				dup2(fd, STDERR_FILENO);
-				close(fd);
-			}
+			// if(error){
+			// 	int fd = open(error_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+			// 	dup2(fd, STDERR_FILENO);
+			// 	close(fd);
+			// }
 
 			execv(path.data(), argv.data());
 
