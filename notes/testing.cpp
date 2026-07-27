@@ -28,7 +28,8 @@ vector<string> split(string s, char delimeter=' '){
 
 
 int main(){
+	cout << std::unitbuf;
+	cerr << std::unitbuf;
 	cout << "razor";
-	cout << "\033[6n" << flush;
 
 }

@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <functional>
 #include <unordered_set>
+#include <set>
 #include <filesystem> // directories, navigation, opening files and programs.
 #include <unistd.h> // standard posix functions.
 
@@ -22,7 +23,7 @@ public:
     unordered_set<string> builtins;
 	filesystem::path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory. use chdir() to change it. 
 	unordered_map<string, function<void(vector<string>&)>> commands;
-    vector<string> all_executables;
+    vector<string> all_executables; // kept sorted.
 
 	char backspace = '\b';
 };

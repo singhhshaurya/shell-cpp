@@ -287,11 +287,12 @@ int main() {
 	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}}; // add all the builtins.
     // Flush after every std::cout / std:cerr
     // # REPL  Read-Eval-Print Loop
-
+	
 	cout << std::unitbuf;
 	cerr << std::unitbuf;
+
 	enableRawMode();
-	createTrie(shell);
+	get_all_executables(shell);
 
 
 	int TERMINAL_OUT = dup(STDOUT_FILENO);

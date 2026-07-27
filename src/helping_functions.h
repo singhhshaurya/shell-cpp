@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include "shell.h"
 
 using namespace std;
 
@@ -18,4 +19,6 @@ bool is_executable(string path);
 void enableRawMode();
 
 void disableRawMode();
+
+void get_all_executables(Shell& shell);
 

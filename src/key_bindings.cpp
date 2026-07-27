@@ -16,8 +16,7 @@ using namespace std;
 class TrieNode{
 public:
     bool isLeaf = 0;
-    unordered_map<char, TrieNode*> children;
-
+    vector<TrieNode*> children = vector<TrieNode*>(256, nullptr);
 };
 
 TrieNode* trieHead = new TrieNode();
@@ -25,97 +24,51 @@ TrieNode* trieHead = new TrieNode();
 void add_to_trie(string s){
     TrieNode* curr = trieHead;
     for(char c:s){
-        if(curr->children.find(c)==curr->children.end()){
-            curr->children[c] = new TrieNode();
+        unsigned char idx = static_cast<unsigned char>(c);
+        if(curr->children[idx] == nullptr){
+            curr->children[idx] = new TrieNode();
         }
-        curr = curr->children[c];
-
+        curr = curr->children[idx];
     }
-    curr -> isLeaf = 1;
+    curr->isLeaf = 1;
 }
-
-void createTrie(Shell& shell){
-    for(string s:shell.builtins){
-        add_to_trie(s);
-    }
-
-    // now we gotta add all the executables from path.
-
-    unordered_set<string> seen;
-    string PATH = getenv("PATH"); // gets path from environment.
-    // cout << PATH << "\n";
-
-    for(string dir:split(PATH, ':')){
-        if (dir.empty())
-            continue;
-
-        try {
-            for (const auto& entry : filesystem::directory_iterator(dir)) {
-
-                if (!is_executable(entry.path()))
-                    continue;
-
-                string name = entry.path().filename().string();
-
-                // Avoid duplicates from multiple PATH directories
-                if (seen.insert(name).second)
-                    add_to_trie(name);
-            }
-        }
-        catch (const filesystem::filesystem_error&) {
-            // Ignore invalid or inaccessible PATH entries
-        }
-    }
-}
-
 
 void onTab(Shell& shell, int& tab_count){
-    TrieNode* curr = trieHead;
-    int find = 1;
-    for(char c:shell.line){
-        if(curr->children.find(c) == curr->children.end()){
-            find = 0;
+    vector<string> completes;
+    string prefix = shell.line;
+
+    auto it = std::lower_bound(shell.all_executables.begin(), shell.all_executables.end(), prefix);
+    while (it != shell.all_executables.end()) {
+        if (prefix.empty() || it->compare(0, prefix.size(), prefix) == 0) {
+            completes.push_back(*it);
+            ++it;
+        } else {
             break;
         }
-        curr = curr->children[c];
     }
-    vector<string> completes;
-    string word;
 
-    vector<pair<string, TrieNode*>> stack  = {{shell.line, curr}};
-
-    if(!find) {
+    if(completes.empty()) {
         cout << "\x07";
-        return; // do nothing at all.
+        return;
     }
-    while(!stack.empty()){
-        word = stack.back().first;
-        curr = stack.back().second;
-        stack.pop_back();
 
-        if(curr->isLeaf) completes.push_back(word);
-        for(auto& i: curr->children){
-            stack.push_back({word + i.first, i.second});
-        }
-    }
     if(completes.size() == 1){
         cout << '\r' << "$ " << completes[0] << " ";
         shell.line = completes[0] + " ";
         shell.leftright_ptr = shell.line.size();
         tab_count = 0;
-
-    }else{
-        if(tab_count == 0) tab_count ++;
-        else{
+    } else {
+        if(tab_count == 0) {
+            tab_count++;
+        } else {
             cout << "\n";
-            for(string s:completes) cout << s << "        ";
-            cout << "\n$ ";
+            for(const string& s : completes) cout << s << "  ";
+            cout << "\b\b\n$ ";
             tab_count = 0;
             shell.line = "";
             shell.leftright_ptr = 0;
         }
     }
-
 }
 
 

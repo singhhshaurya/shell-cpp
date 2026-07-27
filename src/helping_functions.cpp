@@ -124,32 +124,57 @@ void disableRawMode() {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig); // restore the original terminal attributes when raw mode is disabled.
 }
 
-void get_all_executables(Shell& shell){
 
-    for(string s:shell.builtins) shell.all_executables.push_back(s);
+void insert_sorted_unique(vector<string>& values, const string& name) {
+    auto it = lower_bound(values.begin(), values.end(), name);
+    if (it == values.end() || *it != name) {
+        values.insert(it, name);
+    }
+}
+
+void add_executables(Shell& shell, string path){
+    try {
+        for (const auto& entry : filesystem::directory_iterator(path)) {
+
+            if (!is_executable(entry.path()))
+                continue;
+
+            string name = entry.path().filename().string();
+            insert_sorted_unique(shell.all_executables, name);
+        }
+    }
+    catch (const filesystem::filesystem_error&){};
+}
+
+
+// run this only once in beginning. 
+void get_all_executables(Shell& shell){ 
     
-    string PATH = getenv("PATH"); // gets path from environment.
-    unordered_set<string> seen;
+    for(string s:shell.builtins) shell.all_executables.push_back(s);
 
+    string PATH = getenv("PATH"); // gets path from environment.
+    string name;
+    
     for(string dir:split(PATH, ':')){
         if (dir.empty())
             continue;
-
-        try {
+        try{
             for (const auto& entry : filesystem::directory_iterator(dir)) {
 
                 if (!is_executable(entry.path()))
                     continue;
 
-                string name = entry.path().filename().string();
+                name = entry.path().filename().string();
 
                 // Avoid duplicates from multiple PATH directories
-                if (seen.insert(name).second)
-                    shell.all_executables.push_back(name);
+                shell.all_executables.push_back(name);
             }
-        }
-        catch (const filesystem::filesystem_error&) {
+        }catch (const filesystem::filesystem_error&) {
             // Ignore invalid or inaccessible PATH entries
         }
     }
+    sort(shell.all_executables.begin(), shell.all_executables.end());
+    auto it = unique(shell.all_executables.begin(), shell.all_executables.end());
+    shell.all_executables.erase(it, shell.all_executables.end());
+
 }

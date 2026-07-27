@@ -10,7 +10,6 @@
 #include "shell.h"
 using namespace std;
 
-void createTrie(Shell& shell);
 
 void onUp(Shell& shell);
 
