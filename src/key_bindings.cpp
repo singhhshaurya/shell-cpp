@@ -23,9 +23,9 @@ bool prefix_match(vector<string>& words){
 void onTab(Shell& shell, int& tab_count){
     vector<string> completes;
     string prefix;
-
     vector<string> tokens = split(shell.line, ' ');
-    if(tokens.size()==1){
+
+    if(tokens.size()==1){ // find the executable.
         prefix = tokens[0];
         auto it = std::lower_bound(shell.all_executables.begin(), shell.all_executables.end(), prefix);
         while (it != shell.all_executables.end()) {
@@ -36,7 +36,7 @@ void onTab(Shell& shell, int& tab_count){
                 break;
             }
         }
-    }else{
+    }else{ // find the files.
         string dir = tokens.back();
         prefix = split(dir, '/').back();
         dir.erase(dir.end() - prefix.size(), dir.end());
