@@ -39,7 +39,7 @@ void onTab(Shell& shell, int& tab_count){
         return;
     }
 
-    if(completes.size() == 1 || ){
+    if(completes.size() == 1){
         cout << '\r' << "$ " << completes[0] << " ";
         shell.line = completes[0] + " ";
         shell.leftright_ptr = shell.line.size();
