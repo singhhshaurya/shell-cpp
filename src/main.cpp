@@ -299,7 +299,7 @@ int main() {
 	int TERMINAL_IN = dup(STDIN_FILENO);
 
 	while(true){
-		cout << get_directory() << "$ ";
+		// cout << get_directory() << "$ ";
 		cout << "$ ";
 
 		bool go = 1;
