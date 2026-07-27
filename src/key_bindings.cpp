@@ -22,16 +22,34 @@ bool prefix_match(vector<string>& words){
 
 void onTab(Shell& shell, int& tab_count){
     vector<string> completes;
-    string prefix = shell.line;
+    string prefix;
 
-    auto it = std::lower_bound(shell.all_executables.begin(), shell.all_executables.end(), prefix);
-    while (it != shell.all_executables.end()) {
-        if (prefix.empty() || it->compare(0, prefix.size(), prefix) == 0) {
-            completes.push_back(*it);
-            ++it;
-        } else {
-            break;
+    vector<string> tokens = split(shell.line, ' ');
+    if(tokens.size()==1){
+        prefix = tokens[0];
+        auto it = std::lower_bound(shell.all_executables.begin(), shell.all_executables.end(), prefix);
+        while (it != shell.all_executables.end()) {
+            if (prefix.empty() || it->compare(0, prefix.size(), prefix) == 0) {
+                completes.push_back(*it);
+                ++it;
+            } else {
+                break;
+            }
         }
+    }else{
+        string dir = tokens.back();
+        prefix = split(dir, '/').back();
+        dir.erase(dir.end() - prefix.size(), dir.end());
+
+        if (dir.empty()) dir = ".";
+
+        for (const auto& entry : filesystem::directory_iterator(dir)) {
+            string name = entry.path().filename().string();
+            if (name.compare(0, prefix.size(), prefix) == 0){
+                completes.push_back(name);
+            }
+        }
+        sort(completes.begin(), completes.end());
     }
 
     if(completes.empty()) {
@@ -39,15 +57,16 @@ void onTab(Shell& shell, int& tab_count){
         return;
     }
 
+    string extra = completes[0].substr(prefix.size(), completes[0].size());
     if(completes.size() == 1){
-        cout << '\r' << "$ " << completes[0] << " ";
-        shell.line = completes[0] + " ";
+        shell.line += extra + " ";
+        cout << '\r' << "$ "  << shell.line;
         shell.leftright_ptr = shell.line.size();
         tab_count = 0;
     }
     else if(prefix_match(completes)) {
-        cout << '\r' << "$ " << completes[0];
-        shell.line = completes[0];
+        shell.line += extra;
+        cout << '\r' << "$ " << shell.line;
         shell.leftright_ptr = shell.line.size();
         tab_count = 0;
     }
