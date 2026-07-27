@@ -13,24 +13,11 @@
 
 using namespace std;
 
-class TrieNode{
-public:
-    bool isLeaf = 0;
-    vector<TrieNode*> children = vector<TrieNode*>(256, nullptr);
-};
-
-TrieNode* trieHead = new TrieNode();
-
-void add_to_trie(string s){
-    TrieNode* curr = trieHead;
-    for(char c:s){
-        unsigned char idx = static_cast<unsigned char>(c);
-        if(curr->children[idx] == nullptr){
-            curr->children[idx] = new TrieNode();
-        }
-        curr = curr->children[idx];
+bool prefix_match(vector<string>& words){
+    for(int i=1; i<words.size(); i++){
+        if(words[i].compare(0, words[i-1].size(), words[i-1]) != 0) return false;
     }
-    curr->isLeaf = 1;
+    return true;
 }
 
 void onTab(Shell& shell, int& tab_count){
@@ -52,7 +39,7 @@ void onTab(Shell& shell, int& tab_count){
         return;
     }
 
-    if(completes.size() == 1){
+    if(completes.size() == 1 || prefix_match(completes)){
         cout << '\r' << "$ " << completes[0] << " ";
         shell.line = completes[0] + " ";
         shell.leftright_ptr = shell.line.size();
