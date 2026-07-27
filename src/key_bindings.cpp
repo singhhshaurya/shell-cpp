@@ -14,6 +14,9 @@
 using namespace std;
 
 bool prefix_match(vector<string>& words){
+    for(int i=0; i<words.size(); i++){
+        if(words[i].back()=='/') words[i].pop_back(); // remove '/' for directories.
+    }
     for(int i=1; i<words.size(); i++){
         if(words[i].compare(0, words[i-1].size(), words[i-1]) != 0) return false;
     }
@@ -69,6 +72,7 @@ void onTab(Shell& shell, int& tab_count){
     }
     else if(prefix_match(completes)) {
         shell.line += extra;
+        if(extra.back() == '/') shell.line.pop_back();
         cout << '\r' << "$ " << shell.line;
         shell.leftright_ptr = shell.line.size();
         tab_count = 0;
