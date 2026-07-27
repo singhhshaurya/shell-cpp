@@ -64,10 +64,8 @@ void onTab(Shell& shell, int& tab_count){
         } else {
             cout << "\n";
             for(const string& s : completes) cout << s << "  ";
-            cout << "\b\b\n$ ";
+            cout << "\b\b\n$ " << shell.line;
             tab_count = 0;
-            shell.line = "";
-            shell.leftright_ptr = 0;
         }
     }
 }
