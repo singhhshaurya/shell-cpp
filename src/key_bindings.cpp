@@ -45,6 +45,7 @@ void onTab(Shell& shell, int& tab_count){
 
         for (const auto& entry : filesystem::directory_iterator(dir)) {
             string name = entry.path().filename().string();
+            if(entry.is_directory()) name += "/"; 
             if (name.compare(0, prefix.size(), prefix) == 0){
                 completes.push_back(name);
             }
@@ -58,8 +59,10 @@ void onTab(Shell& shell, int& tab_count){
     }
 
     string extra = completes[0].substr(prefix.size(), completes[0].size());
+
     if(completes.size() == 1){
-        shell.line += extra + " ";
+        if(extra.back() == '/') shell.line += extra;
+        else shell.line += extra + " ";
         cout << '\r' << "$ "  << shell.line;
         shell.leftright_ptr = shell.line.size();
         tab_count = 0;
