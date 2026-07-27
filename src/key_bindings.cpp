@@ -39,12 +39,19 @@ void onTab(Shell& shell, int& tab_count){
         return;
     }
 
-    if(completes.size() == 1 || prefix_match(completes)){
+    if(completes.size() == 1 || ){
         cout << '\r' << "$ " << completes[0] << " ";
         shell.line = completes[0] + " ";
         shell.leftright_ptr = shell.line.size();
         tab_count = 0;
-    } else {
+    }
+    else if(prefix_match(completes)) {
+        cout << '\r' << "$ " << completes[0];
+        shell.line = completes[0];
+        shell.leftright_ptr = shell.line.size();
+        tab_count = 0;
+    }
+    else {
         if(tab_count == 0) {
             cout << "\x07";
             tab_count++;
