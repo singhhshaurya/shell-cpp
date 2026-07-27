@@ -13,6 +13,7 @@
 #include <fstream> // for normal writing and reading in a file.
 #include <fcntl.h> // for open(), file descriptor changing.
 
+#include <termios.h>
 
 using namespace std;
 using namespace filesystem;
@@ -91,4 +92,33 @@ vector<string> get_args(string& command){
 	}
 	args.push_back(curr);
 	return args;
+}
+
+bool is_executable(string path){
+	return access(path.c_str(), X_OK) == 0;
+}
+
+
+termios orig; // this will hold the original terminal attributes so that we can restore them later.
+
+void enableRawMode() {
+    tcgetattr(STDIN_FILENO, &orig); // get the current terminal attributes and store them in orig.
+
+    termios raw = orig;
+    raw.c_lflag &= ~(ICANON | ECHO); // disable canonical mode (ICANON) and echoing (ECHO). 
+                                     //This means input will be available immediately (not line-buffered) and will not be echoed to the terminal.
+
+                                     
+    raw.c_cc[VMIN] = 1; // Set the minimum number of bytes that must be available before read() returns. 
+                       // In this case, it is set to 1, meaning read() will return as soon as at least one byte is available. 
+    raw.c_cc[VTIME] = 0; // Set the timeout value for read() in deciseconds. 
+                       // In this case, it is set to 0, meaning read() will wait indefinitely for input.
+                       
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw); // set the terminal attributes to the new raw mode settings. 
+                                              // TCSAFLUSH means to apply the changes after flushing the input and output buffers. 
+
+}
+
+void disableRawMode() {
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig); // restore the original terminal attributes when raw mode is disabled.
 }

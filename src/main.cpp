@@ -13,25 +13,23 @@
 #include <fstream> // for normal writing and reading in a file.
 #include <fcntl.h> // for open(), file descriptor changing.
 
+#include "shell.h"
 #include "helping_functions.h"
-
+#include "key_bindings.h"
 
 
 using namespace std;
 using namespace filesystem;
 
 
-const string remove_line = "\033[A";
-const string backspace = "\b";
-
-unordered_set<string> builtins = {"echo", "exit", "type", "pwd"};
-path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory. use chdir() to change it. 
+Shell shell;
 
 
 string get_directory(){
-	if(curr_directory == "" or curr_directory == "/") return getenv("HOME");
-	return curr_directory;
+	if(shell.curr_directory == "" or shell.curr_directory == "/") return getenv("HOME");
+	return shell.curr_directory;
 }
+
 
 string program_find_in_path(string command){
 	string PATH = getenv("PATH"); // gets path from environment.
@@ -47,11 +45,6 @@ string program_find_in_path(string command){
 		}
 	}
 	return "";
-}
-
-
-bool is_executable(string path){
-	return access(path.c_str(), X_OK) == 0;
 }
 
 
@@ -135,9 +128,8 @@ void execute_program(string& program, vector<string>& args){
 }
 
 
-	
 bool invalid_command(string s){
-	return builtins.find(s) == builtins.end();
+	return shell.builtins.find(s) == shell.builtins.end();
 }
 
 // BUILTIN COMMANDS
@@ -145,7 +137,7 @@ bool invalid_command(string s){
 int type(vector<string>& args){
 	// check if its builtin
 	string command = args[0];
-	if(builtins.find(command) != builtins.end()){
+	if(shell.builtins.find(command) != shell.builtins.end()){
 		cout << command << " is a shell builtin" << endl;
 		return 1;
 	}
@@ -216,24 +208,23 @@ void echo(vector<string>& args){
 		file << output << '\n';
 	}
 	else{
-		cout << output << backspace << endl;
+		cout << output << shell.backspace << endl;
 	}
 }
 
 
 void pwd(vector<string>& args){
-	if(curr_directory == "" or curr_directory == "/"){
+	if(shell.curr_directory == "" or shell.curr_directory == "/"){
 		cout << getenv("HOME") << endl;
 	}
-	else cout << curr_directory.string() << endl;
+	else cout << shell.curr_directory.string() << endl;
 
 }
 
 
-
 void cd(vector<string>& args){
 	if(args.size()==0){
-		curr_directory = const_cast<char*>("");
+		shell.curr_directory = const_cast<char*>("");
 
 	}else if(args.size()>1){
 		cout << "cd: too many arguments" << endl;
@@ -242,14 +233,14 @@ void cd(vector<string>& args){
 		string path = args[0];
 		if(path[0]=='/'){ // absolute path
 			if(exists(path)){
-				curr_directory = path;
+				shell.curr_directory = path;
 			}
 			else {
 				cout << "cd: " << path << ": No such file or directory" << endl;
 			}
 		}
 		else{
-			filesystem::path temp_curr_directory = curr_directory;
+			filesystem::path temp_curr_directory = shell.curr_directory;
 			vector<string> folders = split(path, '/');
 
 			for(string folder:folders){
@@ -270,8 +261,8 @@ void cd(vector<string>& args){
 					}
 				}
 			}
-			curr_directory = temp_curr_directory;
-			chdir(curr_directory.string().data()); // changes the current working directory of the process to the new directory.
+			shell.curr_directory = temp_curr_directory;
+			chdir(shell.curr_directory.string().data()); // changes the current working directory of the process to the new directory.
 
 		}
 	}
@@ -280,42 +271,98 @@ void cd(vector<string>& args){
 
 // EXECUTION
 
-unordered_map<string, function<void(vector<string>&)>> commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}};
 
 void execute_line(string& command, vector<string>& args){
-	if (commands.find(command)!=commands.end()){
-		commands[command](args); // execute that 
+	if (shell.commands.find(command)!=shell.commands.end()){
+		shell.commands[command](args); // execute that 
 	}else{
 		execute_program(command, args);
 	}
 }
 
 
+
 int main() {
-  // Flush after every std::cout / std:cerr
+	shell.builtins = {"echo", "exit", "type", "pwd"};
+	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}}; // add all the builtins.
+    // Flush after every std::cout / std:cerr
+    // # REPL  Read-Eval-Print Loop
+
 	cout << std::unitbuf;
 	cerr << std::unitbuf;
+	enableRawMode();
+	createTrie(shell);
 
-
-	string line;
 
 	int TERMINAL_OUT = dup(STDOUT_FILENO);
 	int TERMINAL_IN = dup(STDIN_FILENO);
 
-	
 	while(true){
-		vector<string> commands_executed = {};
-
 		// cout << get_directory() << "$ ";
 		cout << "$ ";
 
-		if(!getline(cin, line)) break;
-		commands_executed.push_back(line);
+		bool go = 1;
+		int tab_count = 0;
 
+		while(go){
+			char c;
+			read(STDIN_FILENO, &c, 1);
 
+			switch (c) {
+			case 27: {
+				char seq[2];
+				read(STDIN_FILENO, &seq[0], 1);
+				read(STDIN_FILENO, &seq[1], 1);
+
+				if (seq[0] == '[') {
+					switch (seq[1]) {
+					case 'A':
+						onUp(shell);
+						break;
+
+					case 'B':
+						onDown(shell);
+    					break;
+
+					case 'D':
+						onLeft(shell);
+						break;
+
+					case 'C':
+						onRight(shell);
+						break;
+					}
+				}
+				break;
+			}
+			case 9: // tab
+				onTab(shell, tab_count);	
+				break;
+
+			case 127: // backspace.
+				onBackspace(shell);
+				break;
+
+			case '\n':
+				cout << '\n';
+				go = 0;
+				break;
+
+			default:
+				cout << c << shell.line.substr(shell.leftright_ptr, shell.line.size() - shell.leftright_ptr);
+				cout << "\r" << "\033[" << shell.leftright_ptr+3 << "C"; // brings cursor back to where shell.leftright_ptr is.
+				shell.line.insert(shell.line.begin()+shell.leftright_ptr, c);
+				shell.leftright_ptr++;
+				break;
+			}
+
+		}
+
+		if (!shell.line.empty() &&  (shell.history.empty() || shell.line != shell.history.back())) shell.history.push_back(shell.line);
+		shell.updown_ptr = shell.history.size();
 		// parsing the line.
 
-		vector<string> tokens = get_args(line); 
+		vector<string> tokens = get_args(shell.line); 
 		string command = tokens[0];
 		if (command.empty()) {
 			continue;
@@ -326,6 +373,9 @@ int main() {
 		if(command == "exit") break;
 
 		execute_line(command, args);
+		shell.line.clear();
+		shell.leftright_ptr = 0;
 	}
+	disableRawMode();
 }
 

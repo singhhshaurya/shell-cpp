@@ -25,6 +25,12 @@ $PATH → append whatever directories were already in your PATH.
 
 
 $
+
+# REPL 
+- REPL stands for Read-Eval-Print Loop. It is an interactive programming environment that takes user input (Read), evaluates it (Eval), and returns the result to the user (Print). The loop continues, allowing the user to enter new commands or expressions.
+
+- In the context of a shell, the REPL allows users to enter commands, which are then executed by the shell, and the output is displayed back to the user. This process repeats, allowing for continuous interaction with the shell. The REPL is a fundamental concept in many programming languages and interactive environments, providing a way for users to experiment with code and receive immediate feedback.
+
 # WORKING DIRECTORY
 - The working directory is the current directory in which a process is running. 
 
@@ -304,3 +310,121 @@ execvp(argv[0], argv);
 
 
   
+# CANONICAL MODE
+  - Canonical mode is a mode of input processing in Unix-like operating systems that allows the terminal to process input line by line. In canonical mode, the terminal buffers the input until a newline character (Enter key) is received, at which point it sends the entire line of input to the program for processing. This mode is also known as "cooked" mode.
+
+# NON CANONICAL MODE
+  - This is actually the default mode for terminals. 
+  - In non-canonical mode, input is processed immediately, character by character, without waiting for a newline. This allows programs to respond to user input in real-time, which is useful for interactive applications like text editors or games.
+
+
+# TERMINOS
+- Terminos is a POSIX API that provides an interface for controlling terminal I/O characteristics. It allows programs to configure terminal settings, such as input and output modes, special characters, and control sequences (non canonocal mode)
+
+- Terminos helps changing terminal settings as to our requirements.
+
+## ICANON FLAG
+- This flag decides whether the terminal is in canonical mode or non-canonical mode.
+- Using TERMINOS, we can set or unset the ICANON flag to switch between canonical and non-canonical modes.
+
+ICANON = ON -> we get hello\n when pressed enter.
+ICANON = OFF -> typing
+
+hello
+
+causes your program to receive
+
+'h'
+'e'
+'l'
+'l'
+'o'
+
+immediately.
+
+## ECHO FLAG
+- This flag controls whether the terminal echoes (displays) the characters typed by the user.
+- When ECHO is enabled, characters typed by the user are displayed on the terminal. When ECHO is disabled, characters typed by the user are not displayed, which is useful for password input
+
+## RAW MODE (non-canonical mode with ECHO disabled)
+- Raw mode is a terminal mode that combines non-canonical input processing (ICANON disabled) with the disabling of input echoing (ECHO disabled).
+- Now we have control over what is printed on terminal, and what key pressing does what.
+
+## VMIN AND VTIME
+- VMIN and VTIME are two parameters used in non-canonical mode to control the behavior of input processing in Unix-like operating systems. They are part of the termios structure, which is used to configure terminal settings.
+- VMIN specifies the minimum number of characters that must be read before the read() function returns
+- VTIME specifies the maximum amount of time to wait for input before the read() function returns
+
+## SAVING AND RESTORING
+- Never leave the user's terminal in raw mode.
+
+Always save the original settings.
+
+```cpp
+termios original;
+
+tcgetattr(STDIN_FILENO, &original);
+```
+
+Enable raw mode.
+When the program exits
+
+```cpp
+tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
+```
+
+Keyboard
+      │
+      ▼
+Kernel Terminal Driver
+      │
+      │   (raw mode)
+      ▼
+Bash
+      │
+      ├── read one byte
+      ├── maintain input buffer
+      ├── cursor position
+      ├── history
+      ├── autocomplete
+      ├── redraw line
+      ▼
+Screen
+
+
+## CPP Example with explanation
+```cpp
+#include <iostream>
+#include <termios.h>
+#include <unistd.h>
+
+int main() {
+    termios original, raw;
+
+    // Get the current terminal settings
+    tcgetattr(STDIN_FILENO, &original);
+    raw = original;
+
+    // Disable canonical mode and echo
+    raw.c_lflag &= ~(ICANON | ECHO);
+
+    // Set VMIN and VTIME for non-canonical mode
+    raw.c_cc[VMIN] = 1;  // Minimum number of characters to read
+    raw.c_cc[VTIME] = 0; // No timeout
+
+    // Apply the new settings
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+
+    std::cout << "Raw mode enabled. Type something (Ctrl+C to exit):\n";
+
+    char c;
+    while (true) {
+        read(STDIN_FILENO, &c, 1); // Read one character at a time
+        std::cout << "You typed: " << c << std::endl;
+    }
+
+    // Restore the original terminal settings before exiting
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
+    return 0;
+}
+```

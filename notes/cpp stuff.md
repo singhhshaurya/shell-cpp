@@ -1,7 +1,6 @@
 # CPP
 
-
-alias run='g++ src/main.cpp -o main && ./main'
+alias run='g++ src/main.cpp src/helping_functions.cpp -o main && ./main'
 ```cpp
 
 
@@ -86,18 +85,18 @@ int main() {
 | `\?`   | Literal `?` (rarely needed)                 | `cout << "\?";`           |
 
 
-
-### CURSOR MOVEMENTS
+## TERMINOS (raw mode) IMPORTANT SEQUENCES. (check out shell for terminos and raw mode.)
+### CURSOR MOVEMENTS 
 | Sequence   | Action                     | Typical use            |
 | ---------- | -------------------------- | ---------------------- |
-| `\033[A`   | Move cursor up 1 line      | Command history redraw |
+| `\033[A`   | Move cursor up 1 line      | Command history redraw | (ESC [ A) . 
 | `\033[B`   | Move cursor down 1 line    | Menus                  |
 | `\033[C`   | Move cursor right 1 column | Cursor editing         |
 | `\033[D`   | Move cursor left 1 column  | Left arrow editing     |
 | `\033[5A`  | Move up 5 lines            | Multi-line editing     |
 | `\033[10C` | Move right 10 columns      | Jump cursor            |
 
-### CURSOR POSITIONING
+### CURSOR POSITIONING - IMPORTANT FOR TERMINOS (raw mode).
 | Sequence        | Action               | Use                |
 | --------------- | -------------------- | ------------------ |
 | `\033[H`        | Top-left corner      | Home position      |
@@ -112,6 +111,8 @@ int main() {
 | `\033[J`  | Clear from cursor downward | Partial refresh        |
 | `\033[K`  | Clear to end of line       | Updating prompts       |
 | `\033[2K` | Clear whole current line   | Redrawing command line |
+
+
 
 ### ARROW KEYS
 | Key | Bytes received |
