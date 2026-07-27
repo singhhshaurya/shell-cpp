@@ -59,6 +59,7 @@ void onTab(Shell& shell, int& tab_count){
         tab_count = 0;
     } else {
         if(tab_count == 0) {
+            cout << "\x07";
             tab_count++;
         } else {
             cout << "\n";
