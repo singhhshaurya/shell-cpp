@@ -13,7 +13,7 @@
 
 using namespace std;
 
-bool prefix_match(vector<string>& words){
+bool prefix_match(vector<string> words){
     for(int i=0; i<words.size(); i++){
         if(words[i].back()=='/') words[i].pop_back(); // remove '/' for directories.
     }
