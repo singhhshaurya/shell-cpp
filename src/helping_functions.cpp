@@ -14,6 +14,7 @@
 #include <fcntl.h> // for open(), file descriptor changing.
 
 #include <termios.h>
+#include "shell.h"
 
 using namespace std;
 using namespace filesystem;
@@ -113,7 +114,7 @@ void enableRawMode() {
                        // In this case, it is set to 1, meaning read() will return as soon as at least one byte is available. 
     raw.c_cc[VTIME] = 0; // Set the timeout value for read() in deciseconds. 
                        // In this case, it is set to 0, meaning read() will wait indefinitely for input.
-                       
+
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw); // set the terminal attributes to the new raw mode settings. 
                                               // TCSAFLUSH means to apply the changes after flushing the input and output buffers. 
 
@@ -121,4 +122,34 @@ void enableRawMode() {
 
 void disableRawMode() {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig); // restore the original terminal attributes when raw mode is disabled.
+}
+
+void get_all_executables(Shell& shell){
+
+    for(string s:shell.builtins) shell.all_executables.push_back(s);
+    
+    string PATH = getenv("PATH"); // gets path from environment.
+    unordered_set<string> seen;
+
+    for(string dir:split(PATH, ':')){
+        if (dir.empty())
+            continue;
+
+        try {
+            for (const auto& entry : filesystem::directory_iterator(dir)) {
+
+                if (!is_executable(entry.path()))
+                    continue;
+
+                string name = entry.path().filename().string();
+
+                // Avoid duplicates from multiple PATH directories
+                if (seen.insert(name).second)
+                    shell.all_executables.push_back(name);
+            }
+        }
+        catch (const filesystem::filesystem_error&) {
+            // Ignore invalid or inaccessible PATH entries
+        }
+    }
 }

@@ -22,6 +22,7 @@ public:
     unordered_set<string> builtins;
 	filesystem::path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory. use chdir() to change it. 
 	unordered_map<string, function<void(vector<string>&)>> commands;
+    vector<string> all_executables;
 
 	char backspace = '\b';
 };

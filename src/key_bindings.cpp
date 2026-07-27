@@ -6,8 +6,11 @@
 #include <unordered_map>
 #include <functional>
 #include <unordered_set>
+#include <filesystem> // directories, navigation, opening files and programs.
 
 #include "shell.h"
+#include "helping_functions.h"
+
 using namespace std;
 
 class TrieNode{
@@ -19,17 +22,49 @@ public:
 
 TrieNode* trieHead = new TrieNode();
 
+void add_to_trie(string s){
+    TrieNode* curr = trieHead;
+    for(char c:s){
+        if(curr->children.find(c)==curr->children.end()){
+            curr->children[c] = new TrieNode();
+        }
+        curr = curr->children[c];
+
+    }
+    curr -> isLeaf = 1;
+}
+
 void createTrie(Shell& shell){
     for(string s:shell.builtins){
-        TrieNode* curr = trieHead;
-        for(char c:s){
-            if(curr->children.find(c)==curr->children.end()){
-                curr->children[c] = new TrieNode();
-            }
-            curr = curr->children[c];
+        add_to_trie(s);
+    }
 
+    // now we gotta add all the executables from path.
+
+    unordered_set<string> seen;
+    string PATH = getenv("PATH"); // gets path from environment.
+    // cout << PATH << "\n";
+
+    for(string dir:split(PATH, ':')){
+        if (dir.empty())
+            continue;
+
+        try {
+            for (const auto& entry : filesystem::directory_iterator(dir)) {
+
+                if (!is_executable(entry.path()))
+                    continue;
+
+                string name = entry.path().filename().string();
+
+                // Avoid duplicates from multiple PATH directories
+                if (seen.insert(name).second)
+                    add_to_trie(name);
+            }
         }
-        curr -> isLeaf = 1;
+        catch (const filesystem::filesystem_error&) {
+            // Ignore invalid or inaccessible PATH entries
+        }
     }
 }
 

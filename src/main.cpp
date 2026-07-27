@@ -40,7 +40,7 @@ string program_find_in_path(string command){
 
 		if (exists(candidate) &&
 			is_regular_file(candidate) &&
-			access(candidate.c_str(), X_OK) == 0) {
+			is_executable(candidate)) {
 			return candidate.string();
 		}
 	}
