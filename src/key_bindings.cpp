@@ -50,7 +50,7 @@ void onTab(Shell& shell, int& tab_count){
     vector<pair<string, TrieNode*>> stack  = {{shell.line, curr}};
 
     if(!find) {
-        cout << "empty";
+        cout << "\x07";
         return; // do nothing at all.
     }
     while(!stack.empty()){
