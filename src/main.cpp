@@ -309,7 +309,7 @@ int main() {
 	cerr << std::unitbuf;
 
 	enableRawMode();
-	// get_all_executables(shell);
+	get_all_executables(shell);
 
 
 	int TERMINAL_OUT = dup(STDOUT_FILENO);
