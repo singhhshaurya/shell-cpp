@@ -22,3 +22,4 @@ void disableRawMode();
 
 void get_all_executables(Shell& shell);
 
+vector<string> fetch_option_flags(vector<string>& args);

@@ -23,8 +23,9 @@ bool prefix_match(vector<string> words){
     return true;
 }
 
+
 void onTab(Shell& shell, int& tab_count){
-    vector<string> completes;
+    vector<string> completes; // stores the valid answers.
     string prefix;
     vector<string> tokens = split(shell.line, ' ');
 
@@ -39,7 +40,7 @@ void onTab(Shell& shell, int& tab_count){
                 break;
             }
         }
-    }else{ // find the files.
+    }else{ // find the files and directories.
         string dir = tokens.back();
         prefix = split(dir, '/').back();
         dir.erase(dir.end() - prefix.size(), dir.end());
@@ -48,7 +49,7 @@ void onTab(Shell& shell, int& tab_count){
 
         for (const auto& entry : filesystem::directory_iterator(dir)) {
             string name = entry.path().filename().string();
-            if(entry.is_directory()) name += "/"; 
+            if(entry.is_directory()) name += "/"; // add '/' to directories.
             if (name.compare(0, prefix.size(), prefix) == 0){
                 completes.push_back(name);
             }

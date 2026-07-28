@@ -17,7 +17,6 @@ using namespace std;
 class Shell {
 public:
     string line;
-    vector<string> history;
     int updown_ptr = 0;
 	int leftright_ptr = 0;
     unordered_set<string> builtins;
@@ -25,6 +24,9 @@ public:
 	unordered_map<string, function<void(vector<string>&)>> commands;
     vector<string> all_executables; // kept sorted.
 
+    // for keeping history.
+    vector<string> history;
+    unordered_map<string, pair<string, string>> tab_functions;
 	char backspace = '\b';
 };
 

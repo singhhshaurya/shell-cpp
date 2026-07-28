@@ -268,7 +268,11 @@ void cd(vector<string>& args){
 	}
 }
 
+void complete(vector<string>& args){
+	vector<string> option_flags = fetch_option_flags(args);
 
+	
+}
 // EXECUTION
 
 
@@ -283,8 +287,8 @@ void execute_line(string& command, vector<string>& args){
 
 
 int main() {
-	shell.builtins = {"echo", "exit", "type", "pwd"};
-	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}}; // add all the builtins.
+	shell.builtins = {"echo", "exit", "type", "pwd", "complete"};
+	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}, {"complete", complete}}; // add all the builtins.
     // Flush after every std::cout / std:cerr
     // # REPL  Read-Eval-Print Loop
 	

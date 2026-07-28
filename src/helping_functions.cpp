@@ -95,6 +95,15 @@ vector<string> get_args(string& command){
 	return args;
 }
 
+vector<string> fetch_option_flags(vector<string>& args){
+    vector<string> option_flags;
+    for(string s:args){
+        if(s[0] == '-') option_flags.push_back(s);
+    }
+    return option_flags;
+}
+
+
 bool is_executable(string path){
 	return access(path.c_str(), X_OK) == 0;
 }
