@@ -27,7 +27,7 @@ bool prefix_match(vector<string> words){
 bool check_with_complete(Shell& shell){
     for(auto& i: shell.tab_completions){
         if(i.first == shell.line){
-            execute whatever it is.
+            // execute whatever it is.
             string option = i.second.first;
             string command = i.second.first;
 
