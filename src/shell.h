@@ -26,7 +26,7 @@ public:
 
     // for keeping history.
     vector<string> history;
-    unordered_map<string, pair<string, string>> tab_functions;
+    unordered_map<string, pair<string, string>> tab_completions;
 	char backspace = '\b';
 };
 

@@ -269,9 +269,22 @@ void cd(vector<string>& args){
 }
 
 void complete(vector<string>& args){
-	vector<string> option_flags = fetch_option_flags(args);
+	string option_flag = args[0];
 
-	
+	if(option_flag == "-p"){
+		string name = args[1];
+		if(shell.tab_completions.find(name) == shell.tab_completions.end()){
+			cout << "complete: " << name << ": no completion specification\n";
+		}else{
+			cout << "complete " << shell.tab_completions[name].first << " " << shell.tab_completions[name].second << " " << name << "\n";
+		}
+	}
+	else{
+		string command = args[1];
+		string name = args[2];
+		
+		shell.tab_completions[name] = {option_flag, command};
+	}
 }
 // EXECUTION
 
@@ -296,7 +309,7 @@ int main() {
 	cerr << std::unitbuf;
 
 	enableRawMode();
-	get_all_executables(shell);
+	// get_all_executables(shell);
 
 
 	int TERMINAL_OUT = dup(STDOUT_FILENO);
