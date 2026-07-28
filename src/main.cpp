@@ -196,7 +196,10 @@ void execute_line(string& command, vector<string>& args){
 	if (shell.commands.find(command)!=shell.commands.end()){
 		shell.commands[command](args); // execute that 
 	}else{
-		execute_program(command, args);
+		string path = program_find_in_path(command);
+		if(path == "") cout << command << ": command not found\n";
+		else execute_program(path, args);
+
 	}
 }
 
@@ -292,8 +295,11 @@ int main() {
 		vector<string> args(tokens.begin()+1, tokens.end());
 
 		if(command == "exit") break;
-
+		
+		disableRawMode();
 		execute_line(command, args);
+		enableRawMode();
+
 		shell.line.clear();
 		shell.leftright_ptr = 0;
 	}

@@ -17,7 +17,10 @@ bool is_executable(string path);
 
 string program_find_in_path(string command);
 
-void execute_program(string& program, vector<string>& args);
+string capture_output_from_pipe(int* pipe);
+
+
+void execute_program(string& path, vector<string>& args, int* pipe = NULL);
 
 
 int create_file(string path, int append = 0);

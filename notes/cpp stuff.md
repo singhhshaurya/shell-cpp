@@ -1,6 +1,6 @@
 # CPP
 
-alias run='g++ src/main.cpp src/helping_functions.cpp -o main && ./main'
+alias run='g++ src/main.cpp src/helping_functions.cpp src/key_bindings.cpp -o main && ./main'
 ```cpp
 
 

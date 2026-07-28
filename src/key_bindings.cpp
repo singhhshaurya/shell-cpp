@@ -25,17 +25,37 @@ bool prefix_match(vector<string> words){
 
 
 bool check_with_complete(Shell& shell){
+    string line = shell.line;
+    while(!line.empty() && line.back() == ' ') line.pop_back(); 
+
     for(auto& i: shell.tab_completions){
-        if(i.first == shell.line){
+        if(i.first == line){
             // execute whatever it is.
             string option = i.second.first;
-            string command = i.second.first;
+            string command = i.second.second;
 
             if(option == "-C"){
-                vector<string> args;
-                execute_program(command, args);
-            }
+                string path;
+                if(command[0] != '/') path = "./" + command;
+                else path = command;
+                vector<string> args; // empty for now.
+                int pipefd[2];
+                pipe(pipefd);
 
+                execute_program(path, args, pipefd); // capture the data in pipe.
+                close(pipefd[1]);
+
+                string output = capture_output_from_pipe(pipefd); // read from pipe.
+                close(pipefd[0]);
+                
+                for(char c:output){
+                    if(c!='\n') shell.line += c; // all lines are concatenated as a completion candidate.
+                }
+                shell.line += " ";
+
+                shell.leftright_ptr = shell.line.size();
+                cout << '\r' << "$ " << shell.line;
+            }
             return 1;
         }
     }

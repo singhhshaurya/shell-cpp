@@ -103,9 +103,19 @@ vector<string> fetch_option_flags(vector<string>& args){
     return option_flags;
 }
 
+string capture_output_from_pipe(int* pipe){
+    string output;
+    char buf[1024];
+    ssize_t n;
+
+    while ((n = read(pipe[0], buf, sizeof(buf))) > 0) {
+        output.append(buf, n);
+    }
+    return output;
+}
 
 bool is_executable(string path){
-	return access(path.c_str(), X_OK) == 0;
+    return access(path.c_str(), X_OK) == 0;
 }
 
 
@@ -132,8 +142,8 @@ string program_find_in_path(string command){
 }
 
 
-void execute_program(string& program, vector<string>& args){
-	string path = program_find_in_path(program);
+void execute_program(string& path, vector<string>& args, int* pipe = NULL){
+    string program = split(path, '/').back();
 	vector<char*> argv = {program.data()};
 
 	string output_path;
@@ -174,6 +184,7 @@ void execute_program(string& program, vector<string>& args){
 
 	// executing the program.
 
+
 	if(path!="" && is_executable(path)) {
 		pid_t pid = fork();
 		if (pid < 0) {
@@ -181,7 +192,12 @@ void execute_program(string& program, vector<string>& args){
 
 		} else if (pid == 0) {
 			// child process
-			if(output){ // put stout to file not termninal.
+            if(pipe != NULL){
+                close(*pipe);                    // Close read end
+                dup2(*(pipe+1), STDOUT_FILENO);      // stdout -> pipe
+                close(*(pipe+1));
+            }
+			else if(output){ // put stout to file not termninal.
 				output --;
 				int fd = create_file(output_path, output); // append me output = 2 tha. it will handle both > and >> .
 				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
