@@ -24,7 +24,31 @@ bool prefix_match(vector<string> words){
 }
 
 
+bool check_with_complete(Shell& shell){
+    for(auto& i: shell.tab_completions){
+        if(i.first == shell.line){
+            // execute whatever it is.
+            string option = i.second.first;
+            string command = i.second.first;
+
+            if(option == "-C"){
+                vector<string> args;
+                execute_program(command, args);
+            }
+
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
 void onTab(Shell& shell, int& tab_count){
+    // first check for complete builtin ho.
+    if(check_with_complete(shell)) return;
+
+
+
     vector<string> completes; // stores the valid answers.
     string prefix;
     vector<string> tokens = split(shell.line, ' ');

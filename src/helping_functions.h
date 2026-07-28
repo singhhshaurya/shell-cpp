@@ -6,11 +6,19 @@
 
 using namespace std;
 
-bool getCursorPosition(int &row, int &col);
 
 std::vector<std::string> split(std::string s, char delimeter=' ');
 
 vector<string> get_args(string& command);
+
+string get_directory(Shell& shell);
+
+bool is_executable(string path);
+
+string program_find_in_path(string command);
+
+void execute_program(string& program, vector<string>& args);
+
 
 int create_file(string path, int append = 0);
 

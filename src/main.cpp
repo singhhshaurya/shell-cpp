@@ -25,107 +25,10 @@ using namespace filesystem;
 Shell shell;
 
 
-string get_directory(){
-	if(shell.curr_directory == "" or shell.curr_directory == "/") return getenv("HOME");
-	return shell.curr_directory;
-}
 
 
-string program_find_in_path(string command){
-	string PATH = getenv("PATH"); // gets path from environment.
-	// cout << PATH << "\n";
-
-	for(string dir:split(PATH, ':')){
-		path candidate = path(dir) / command;
-
-		if (exists(candidate) &&
-			is_regular_file(candidate) &&
-			is_executable(candidate)) {
-			return candidate.string();
-		}
-	}
-	return "";
-}
 
 
-void execute_program(string& program, vector<string>& args){
-	string path = program_find_in_path(program);
-	vector<char*> argv = {program.data()};
-
-	string output_path;
-	int output = 0;
-
-	string error_path;
-	int error = 0;
-	int fd;
-
-	for(int i=0; i<args.size(); i++){
-		if(args[i] == ">" || args[i] == "1>" || args[i] == "1>>" || args[i] == ">>") {
-			if(output){
-				create_file(output_path, output-1);
-				output_path = "";
-			}
-
-			output = 1;
-			error = 0;
-			if(args[i] == "1>>" || args[i] == ">>") output = 2;
-			continue;
-		}
-		if(args[i] == "2>" || args[i] == "2>>"){
-			if(error){
-				create_file(error_path, error-1);
-				error_path = "";
-			}
-			error = 1;
-			output = 0;
-			if(args[i] == "2>>") error = 2;
-			continue;
-		}
-
-		if(output) output_path += args[i];
-		else if(error) error_path += args[i];
-		else argv.push_back(args[i].data());
-	}
-	argv.push_back(nullptr);
-
-	// executing the program.
-
-	if(path!="" && is_executable(path)) {
-		pid_t pid = fork();
-		if (pid < 0) {
-			std::cerr << "fork() failed\n";     // fork failed
-
-		} else if (pid == 0) {
-			// child process
-			if(output){ // put stout to file not termninal.
-				output --;
-				int fd = create_file(output_path, output); // append me output = 2 tha. it will handle both > and >> .
-				dup2(fd, STDOUT_FILENO); // STDOUT_FILENO is basically 1.
-				close(fd);
-			}
-
-			if(error){
-				error --;
-				// int fd = open(error_path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-				int fd = create_file(error_path, error);
-				dup2(fd, STDERR_FILENO);
-				close(fd);
-			}
-
-			execv(path.data(), argv.data());
-
-			perror("execv"); // execv() failed
-			exit(1); // exit child process with error code
-
-		} else {
-			// parent processrun
-			waitpid(pid, nullptr, 0);
-		}
-
-	}
-	else cout << program << ": command not found" << endl;
-
-}
 
 
 bool invalid_command(string s){
@@ -276,7 +179,7 @@ void complete(vector<string>& args){
 		if(shell.tab_completions.find(name) == shell.tab_completions.end()){
 			cout << "complete: " << name << ": no completion specification\n";
 		}else{
-			cout << "complete " << shell.tab_completions[name].first << " " << shell.tab_completions[name].second << " " << name << "\n";
+			cout << "complete " << shell.tab_completions[name].first << " '" << shell.tab_completions[name].second << "' " << name << "\n";
 		}
 	}
 	else{
@@ -316,7 +219,7 @@ int main() {
 	int TERMINAL_IN = dup(STDIN_FILENO);
 
 	while(true){
-		// cout << get_directory() << "$ ";
+		// cout << get_directory(shell) << "$ ";
 		cout << "$ ";
 
 		bool go = 1;
