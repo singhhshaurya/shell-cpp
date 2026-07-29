@@ -103,6 +103,8 @@ vector<string> fetch_option_flags(vector<string>& args){
     return option_flags;
 }
 
+
+
 string capture_output_from_pipe(int* pipe){
     string output;
     char buf[1024];
@@ -142,7 +144,7 @@ string program_find_in_path(string command){
 }
 
 
-void execute_program(string& path, vector<string>& args, int* pipe = NULL){
+int execute_program(string& path, vector<string>& args, int* pipe = NULL){
     string program = split(path, '/').back();
 	vector<char*> argv = {program.data()};
 
@@ -221,9 +223,10 @@ void execute_program(string& path, vector<string>& args, int* pipe = NULL){
 			// parent processrun
 			waitpid(pid, nullptr, 0);
 		}
+        return 1;
 
 	}
-	else cout << program << ": command not found" << endl;
+    return 0;
 
 }
 

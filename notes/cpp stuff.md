@@ -1,8 +1,10 @@
 # CPP
 
 alias run='g++ src/main.cpp src/helping_functions.cpp src/key_bindings.cpp -o main && ./main'
-```cpp
 
+chmod +x .git/hooks/pre-commit    ---   makes a file executable
+
+```cpp
 
 int main() {
   // Flush after every std::cout / std:cerr

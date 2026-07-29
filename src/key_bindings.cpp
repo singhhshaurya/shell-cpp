@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <utility>
 #include <unordered_map>
 #include <functional>
 #include <unordered_set>
@@ -24,82 +25,96 @@ bool prefix_match(vector<string> words){
 }
 
 
-bool check_with_complete(Shell& shell){
-    string line = shell.line;
-    while(!line.empty() && line.back() == ' ') line.pop_back(); 
+vector<string> check_with_complete(Shell& shell){
+    vector<string> tokens = split(shell.line);
+    string prefix = tokens[0]; // command to check. first word ho   ga.
+    vector<string> completes;
+
+
+    while(!prefix.empty() && prefix.back() == ' ') prefix.pop_back(); 
+    setenv("COMP_LINE", shell.line.data(), 1);  // 1 means overwrite.
+    setenv("COMP_POINT", to_string(shell.line.size()).data(), 1); 
 
     for(auto& i: shell.tab_completions){
-        if(i.first == line){
+        if(i.first == prefix){
             // execute whatever it is.
             string option = i.second.first;
             string command = i.second.second;
 
+
             if(option == "-C"){
                 string path;
-                if(command[0] != '/') path = "./" + command;
+                if(command[0] != '/') path = "./" + command; // make it relative.
                 else path = command;
-                vector<string> args; // empty for now.
+
+                if(tokens.size() == 1) tokens.insert(tokens.end(), {"", ""});
+                else if(tokens.size() == 2){
+                    if(tokens.back() == "") tokens.push_back("");
+                    else tokens.push_back(tokens[0]);
+                }
+                else swap(tokens[1], tokens[2]);
+
+                prefix = tokens[1]; // word to be completed.
+
                 int pipefd[2];
                 pipe(pipefd);
-
-                execute_program(path, args, pipefd); // capture the data in pipe.
+                int flag = execute_program(path, tokens, pipefd); // capture the data in pipe. flag = 0 if path not executable.
                 close(pipefd[1]);
+                if(flag == 0) return completes; // path not found bekar. return empty completes.
 
                 string output = capture_output_from_pipe(pipefd); // read from pipe.
                 close(pipefd[0]);
-                
-                for(char c:output){
-                    if(c!='\n') shell.line += c; // all lines are concatenated as a completion candidate.
+                vector<string> candidates = split(output, '\n'); // return candidates in completes back to onTab function for checking.
+                for(string s:candidates){
+                    if (s.compare(0, prefix.size(), prefix) == 0){
+                        completes.push_back(s);
+                    }
                 }
-                shell.line += " ";
-
-                shell.leftright_ptr = shell.line.size();
-                cout << '\r' << "$ " << shell.line;
             }
-            return 1;
         }
     }
-    return 0;
+    sort(completes.begin(), completes.end());
+    return completes;
 }
 
 
 void onTab(Shell& shell, int& tab_count){
     // first check for complete builtin ho.
-    if(check_with_complete(shell)) return;
-
-
-
-    vector<string> completes; // stores the valid answers.
-    string prefix;
     vector<string> tokens = split(shell.line, ' ');
+    string prefix;
 
-    if(tokens.size()==1){ // find the executable.
-        prefix = tokens[0];
-        auto it = std::lower_bound(shell.all_executables.begin(), shell.all_executables.end(), prefix);
-        while (it != shell.all_executables.end()) {
-            if (prefix.empty() || it->compare(0, prefix.size(), prefix) == 0) {
-                completes.push_back(*it);
-                ++it;
-            } else {
-                break;
+    vector<string> completes = check_with_complete(shell); // check completor builtin se kuch mile agar.
+
+    if(completes.empty()){
+        if(tokens.size()==1){ // find the executable.
+            prefix = tokens[0];
+            auto it = std::lower_bound(shell.all_executables.begin(), shell.all_executables.end(), prefix);
+            while (it != shell.all_executables.end()) {
+                if (prefix.empty() || it->compare(0, prefix.size(), prefix) == 0) {
+                    completes.push_back(*it);
+                    ++it;
+                } else {
+                    break;
+                }
             }
-        }
-    }else{ // find the files and directories.
-        string dir = tokens.back();
-        prefix = split(dir, '/').back();
-        dir.erase(dir.end() - prefix.size(), dir.end());
+        }else{ // find the files and directories.
+            string dir = tokens.back();
+            prefix = split(dir, '/').back(); // change prefix.
+            dir.erase(dir.end() - prefix.size(), dir.end());
 
-        if (dir.empty()) dir = ".";
+            if (dir.empty()) dir = ".";
 
-        for (const auto& entry : filesystem::directory_iterator(dir)) {
-            string name = entry.path().filename().string();
-            if(entry.is_directory()) name += "/"; // add '/' to directories.
-            if (name.compare(0, prefix.size(), prefix) == 0){
-                completes.push_back(name);
+            for (const auto& entry : filesystem::directory_iterator(dir)) {
+                string name = entry.path().filename().string();
+                if(entry.is_directory()) name += "/"; // add '/' to directories.
+                if (name.compare(0, prefix.size(), prefix) == 0){
+                    completes.push_back(name);
+                }
             }
+            sort(completes.begin(), completes.end());
         }
-        sort(completes.begin(), completes.end());
     }
+    else prefix = tokens.back(); // because completion me last wala word hoga na.
 
     if(completes.empty()) {
         cout << "\x07";
@@ -109,7 +124,7 @@ void onTab(Shell& shell, int& tab_count){
     string extra = completes[0].substr(prefix.size(), completes[0].size());
 
     if(completes.size() == 1){
-        if(extra.back() == '/') shell.line += extra;
+        if(extra != "" && extra.back() == '/') shell.line += extra;
         else shell.line += extra + " ";
         cout << '\r' << "$ "  << shell.line;
         shell.leftright_ptr = shell.line.size();
@@ -128,7 +143,7 @@ void onTab(Shell& shell, int& tab_count){
             tab_count++;
         } else {
             cout << "\n";
-            for(const string& s : completes) cout << s << "  ";
+            for(string s : completes) cout << s << "  ";
             cout << "\b\b\n$ " << shell.line;
             tab_count = 0;
         }

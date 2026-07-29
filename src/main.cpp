@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstdlib>
+#include <cstdlib> // for exit(), getenv(), system(), setenv().
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -198,8 +198,10 @@ void execute_line(string& command, vector<string>& args){
 	}else{
 		string path = program_find_in_path(command);
 		if(path == "") cout << command << ": command not found\n";
-		else execute_program(path, args);
-
+		else {
+			int flag = execute_program(path, args);
+			if(!flag)  cout << command << ": command not found" << endl;
+		}
 	}
 }
 
