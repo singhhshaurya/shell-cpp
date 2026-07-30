@@ -171,16 +171,21 @@ void cd(vector<string>& args){
 	}
 }
 
+
 void complete(vector<string>& args){
 	string option_flag = args[0];
 
-	if(option_flag == "-p"){
+	if(option_flag == "-p"){ 
 		string name = args[1];
 		if(shell.tab_completions.find(name) == shell.tab_completions.end()){
 			cout << "complete: " << name << ": no completion specification\n";
 		}else{
 			cout << "complete " << shell.tab_completions[name].first << " '" << shell.tab_completions[name].second << "' " << name << "\n";
 		}
+	}
+	else if(option_flag == "-r"){
+		string command = args[1];
+		shell.tab_completions.erase(command);
 	}
 	else{
 		string command = args[1];
@@ -189,17 +194,59 @@ void complete(vector<string>& args){
 		shell.tab_completions[name] = {option_flag, command};
 	}
 }
+
+
+void jobs(vector<string>& args){
+	reap_finished_jobs(shell, false); // after execution but before next command.
+
+	Job curr_job;
+	for(int i=0; i<shell.background_jobs.size(); i++){
+		curr_job = shell.background_jobs[i];
+		cout << "[" << curr_job.job_no << "]"; 
+
+		if(i == shell.background_jobs.size()-1) cout << "+";
+		else if(i == shell.background_jobs.size()-2) cout << "-";
+		else cout << " ";
+
+		cout << "  " << curr_job.status;
+		for(int i=0; i<24-curr_job.status.size(); i++) cout << " ";
+		cout << curr_job.command;
+		if(curr_job.status != "Running") cout << "\b\b  \b\b";
+		cout << "\n";
+	}
+
+	int ptr = 0;
+	while(ptr < shell.background_jobs.size()){
+		if(shell.background_jobs[ptr].status!="Running") shell.background_jobs.erase(shell.background_jobs.begin()+ptr);
+		else ptr++;
+	}
+
+}
+
+
 // EXECUTION
 
 
 void execute_line(string& command, vector<string>& args){
-	if (shell.commands.find(command)!=shell.commands.end()){
+	if (shell.commands.find(command)!=shell.commands.end()){ // builtin.
 		shell.commands[command](args); // execute that 
 	}else{
 		string path = program_find_in_path(command);
 		if(path == "") cout << command << ": command not found\n";
 		else {
-			int flag = execute_program(path, args);
+			int flag;
+			if(args.back() == "&"){
+				args.pop_back();
+				int curr_jobs = shell.background_jobs.size();
+				flag = execute_program(shell, path, args, NULL, true); // background = true.
+
+				auto& job = shell.background_jobs.back();
+				cout << "[" << job.job_no << "] " << job.process_id << "\n"; 
+			}
+			else{
+				flag = execute_program(shell, path, args, NULL, false);
+			}
+
 			if(!flag)  cout << command << ": command not found" << endl;
 		}
 	}
@@ -208,8 +255,8 @@ void execute_line(string& command, vector<string>& args){
 
 
 int main() {
-	shell.builtins = {"echo", "exit", "type", "pwd", "complete"};
-	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}, {"complete", complete}}; // add all the builtins.
+	shell.builtins = {"echo", "exit", "type", "pwd", "complete", "jobs"};
+	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}, {"complete", complete}, {"jobs", jobs}}; // add all the builtins.
     // Flush after every std::cout / std:cerr
     // # REPL  Read-Eval-Print Loop
 	
@@ -225,7 +272,8 @@ int main() {
 
 	while(true){
 		// cout << get_directory(shell) << "$ ";
-		cout << "$ ";
+		cout << "\r$ ";
+
 
 		bool go = 1;
 		int tab_count = 0;
@@ -301,6 +349,8 @@ int main() {
 		disableRawMode();
 		execute_line(command, args);
 		enableRawMode();
+
+		reap_finished_jobs(shell); // after execution but before next command.
 
 		shell.line.clear();
 		shell.leftright_ptr = 0;

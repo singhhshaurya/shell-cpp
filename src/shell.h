@@ -14,6 +14,14 @@
 
 
 using namespace std;
+
+struct Job{
+    int job_no;
+    pid_t process_id;
+    string status;
+    string command;
+};
+
 class Shell {
 public:
     string line;
@@ -27,6 +35,7 @@ public:
     // for keeping history.
     vector<string> history;
     unordered_map<string, pair<string, string>> tab_completions;
+    vector<Job> background_jobs; // {job_id and process_id}
 	char backspace = '\b';
 };
 

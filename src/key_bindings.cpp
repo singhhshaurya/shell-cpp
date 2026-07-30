@@ -14,14 +14,27 @@
 
 using namespace std;
 
-bool prefix_match(vector<string> words){
+string prefix_match(vector<string> words){
     for(int i=0; i<words.size(); i++){
         if(words[i].back()=='/') words[i].pop_back(); // remove '/' for directories.
     }
-    for(int i=1; i<words.size(); i++){
-        if(words[i].compare(0, words[i-1].size(), words[i-1]) != 0) return false;
+    string lcp;
+
+    for(int i=0; i<words[0].size(); i++){
+        lcp.push_back(words[0][i]);
+        int flag = 1;
+        for(int j=0; j<words.size(); j++){
+            if(i >= words[j].size() || words[j][i]!=lcp.back()){
+                flag = 0;
+                break;
+            }
+        }
+        if(!flag){
+            lcp.pop_back();
+            return lcp;
+        }
     }
-    return true;
+    return lcp;
 }
 
 
@@ -58,14 +71,13 @@ vector<string> check_with_complete(Shell& shell){
 
                 int pipefd[2];
                 pipe(pipefd);
-                int flag = execute_program(path, tokens, pipefd); // capture the data in pipe. flag = 0 if path not executable.
+                int flag = execute_program(shell, path, tokens, pipefd); // capture the data in pipe. flag = 0 if path not executable.
                 close(pipefd[1]);
                 if(flag == 0) return completes; // path not found bekar. return empty completes.
 
                 string output = capture_output_from_pipe(pipefd); // read from pipe.
                 close(pipefd[0]);
 
-                // if(prefix == "") cout << "\n" << output << "\n";
                 vector<string> candidates = split(output, '\n'); // return candidates in completes back to onTab function for checking.
                 for(string s:candidates){
                     if (!s.empty() && s.compare(0, prefix.size(), prefix) == 0){
@@ -83,7 +95,7 @@ vector<string> check_with_complete(Shell& shell){
 void onTab(Shell& shell, int& tab_count){
     // first check for complete builtin ho.
     vector<string> tokens = split(shell.line, ' ');
-    string prefix;
+    string prefix; // word which is to be ocmpleted.
 
     vector<string> completes = check_with_complete(shell); // check completor builtin se kuch mile agar.
 
@@ -124,6 +136,7 @@ void onTab(Shell& shell, int& tab_count){
     }
 
     string extra = completes[0].substr(prefix.size(), completes[0].size());
+    string lcp = prefix_match(completes);
 
     if(completes.size() == 1){
         if(extra != "" && extra.back() == '/') shell.line += extra;
@@ -132,9 +145,8 @@ void onTab(Shell& shell, int& tab_count){
         shell.leftright_ptr = shell.line.size();
         tab_count = 0;
     }
-    else if(prefix_match(completes)) {
-        shell.line += extra;
-        if(extra.back() == '/') shell.line.pop_back();
+    else if(lcp.size() > prefix.size()) {
+        shell.line += lcp.substr(prefix.size(), lcp.size()); // take common from lcp and add it.
         cout << '\r' << "$ " << shell.line;
         shell.leftright_ptr = shell.line.size();
         tab_count = 0;

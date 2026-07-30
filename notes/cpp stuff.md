@@ -1,6 +1,6 @@
 # CPP
 
-alias run='g++ src/main.cpp src/helping_functions.cpp src/key_bindings.cpp -o main && ./main'
+alias run='src/before_run.sh && g++ src/main.cpp src/helping_functions.cpp src/key_bindings.cpp -o main && ./main'
 
 chmod +x .git/hooks/pre-commit    ---   makes a file executable
 

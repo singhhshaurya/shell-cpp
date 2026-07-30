@@ -68,6 +68,7 @@ This running instance is called a process.
 ## Fork and Exec
 - *FORK*: The fork() system call creates a new process by duplicating the calling process. The new process is called the child process, and the calling process is called the parent process. The child process gets a unique PID, and it inherits a copy of the parent's memory space, including variables, stack, and heap.
 
+
 Before calling fork():
 
 Process
@@ -87,7 +88,7 @@ After fork():
  - Parent is the original process, and child is the new process created by fork(). both are almost identical, but they have different PIDs and can execute independently.
   
 - fork() return 2 values:
-  - In the parent process, fork() returns the PID of the child process (>0)
+  - In the parent process, fork() returns the PID of the child process (>0) *IMPORTANT*
   - In the child process, fork() returns 0.
 - In cpp, fork() is declared in the <unistd.h> header file.
 
@@ -119,6 +120,16 @@ wait() <────────┘
 This fork() → exec() → wait() pattern is the foundation of most Unix command execution.
 
 
+### WORKING CHILD PROCESS IN THE BACKGROUD
+- 1. use pid in the parent process to keep track of the child process. pid in parent process refers to process id of child process.
+- 2. while ((pid = waitpid(-1, &status, WNOHANG)) > 0) use this to reap all child processes that have finished executing.
+
+-  WNOHANG option allows the parent process to continue running without blocking, even if some child processes are still running.
+
+while ((pid = waitpid(-1, &status, WNOHANG)) > 0) returns the PID of a child process that has finished executing, or 0 if no child processes have finished yet. The loop continues until all finished child processes have been reaped.
+
+
+
 ### Example of fork() and exec() in C++:
 ```cpp
 #include <iostream>
@@ -142,6 +153,17 @@ if  (pid < 0) {
 
 
 };
+
+void reap_finished_jobs(Shell &shell) { // run this function everytime the shell prompt is displayed. it reaps all finished child processes and removes them from the jobs list.
+
+    int status;
+    pid_t pid;
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		
+    }
+}
+
 
 
 ```

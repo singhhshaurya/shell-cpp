@@ -45,6 +45,24 @@ vector<string> split(string s, char delimeter=' '){
 	return ans;
 }
 
+string normalise_command_line(string& line){
+	string output;
+	int ptr = 0;
+	while(ptr < line.size()){
+		if(line[ptr] == ' '){
+			output.push_back(' ');
+			while(ptr < line.size() && line[ptr] == ' ') ptr ++;
+		}
+		else{
+			output.push_back(line[ptr]);
+			ptr++;
+		}
+	}
+	while(output.back() == ' ') output.pop_back();
+
+	return output;
+}
+
 vector<string> get_args(string& command){
 	bool single_quotes_closed = 1;
 	bool double_quotes_closed = 1;
@@ -144,7 +162,7 @@ string program_find_in_path(string command){
 }
 
 
-int execute_program(string& path, vector<string>& args, int* pipe = NULL){
+int execute_program(Shell& shell, string& path, vector<string>& args, int* pipe = NULL, bool background = false){
     string program = split(path, '/').back();
 	vector<char*> argv = {program.data()};
 
@@ -186,7 +204,6 @@ int execute_program(string& path, vector<string>& args, int* pipe = NULL){
 
 	// executing the program.
 
-
 	if(path!="" && is_executable(path)) {
 		pid_t pid = fork();
 		if (pid < 0) {
@@ -215,13 +232,19 @@ int execute_program(string& path, vector<string>& args, int* pipe = NULL){
 			}
 
 			execv(path.data(), argv.data());
+			cout << "\r$ ";
 
 			perror("execv"); // execv() failed
 			exit(1); // exit child process with error code
 
 		} else {
 			// parent processrun
-			waitpid(pid, nullptr, 0);
+			if(background) {
+				string command = normalise_command_line(shell.history.back());
+				shell.background_jobs.push_back(Job{(int)shell.background_jobs.size()+1, pid, "Running", command}); // add the background job.
+			}
+			else waitpid(pid, nullptr, 0);
+
 		}
         return 1;
 
@@ -231,9 +254,35 @@ int execute_program(string& path, vector<string>& args, int* pipe = NULL){
 }
 
 
+void reap_finished_jobs(Shell &shell, bool output=true) {
+    int status;
+    pid_t pid;
+	Job curr_job;
 
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		for(int i=0; i<shell.background_jobs.size(); i++){
+			if(shell.background_jobs[i].process_id == pid){
+				if(!output){
+					shell.background_jobs[i].status = "Done";
+					break;
+				}
+				
+				curr_job = shell.background_jobs[i];
+				cout << "[" << curr_job.job_no << "]"; 
 
+				if(i == shell.background_jobs.size()-1) cout << "+";
+				else if(i == shell.background_jobs.size()-2) cout << "-";
+				else cout << " ";
 
+				cout << "  Done                    ";
+				cout << curr_job.command << "\b\b  \b\b\n";
+				shell.background_jobs.erase(shell.background_jobs.begin() + i);
+				break;
+
+			}
+		}
+    }
+}
 
 
 void add_executables(Shell& shell, string path){
