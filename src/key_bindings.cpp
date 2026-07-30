@@ -64,9 +64,11 @@ vector<string> check_with_complete(Shell& shell){
 
                 string output = capture_output_from_pipe(pipefd); // read from pipe.
                 close(pipefd[0]);
+
+                // if(prefix == "") cout << "\n" << output << "\n";
                 vector<string> candidates = split(output, '\n'); // return candidates in completes back to onTab function for checking.
                 for(string s:candidates){
-                    if (s.compare(0, prefix.size(), prefix) == 0){
+                    if (!s.empty() && s.compare(0, prefix.size(), prefix) == 0){
                         completes.push_back(s);
                     }
                 }
