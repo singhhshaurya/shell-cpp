@@ -111,7 +111,8 @@ void echo(vector<string>& args){
 		file << output << '\n';
 	}
 	else{
-		cout << output << shell.backspace << endl;
+		output.pop_back();
+		cout << output << endl;
 	}
 }
 
@@ -196,7 +197,7 @@ void complete(vector<string>& args){
 }
 
 
-void jobs(vector<string>& args){
+void jobs(vector<string>& args){	
 	reap_finished_jobs(shell, false); // after execution but before next command.
 
 	Job curr_job;
@@ -226,33 +227,93 @@ void jobs(vector<string>& args){
 
 // EXECUTION
 
-
-void execute_line(string& command, vector<string>& args){
+void execute_line(string& command, vector<string>& args, int* pipe_out=NULL, int* pipe_in=NULL, bool background=false){
 	if (shell.commands.find(command)!=shell.commands.end()){ // builtin.
 		shell.commands[command](args); // execute that 
 	}else{
 		string path = program_find_in_path(command);
 		if(path == "") cout << command << ": command not found\n";
 		else {
-			int flag;
+			pid_t pid;
 			if(args.back() == "&"){
 				args.pop_back();
 				int curr_jobs = shell.background_jobs.size();
-				flag = execute_program(shell, path, args, NULL, true); // background = true.
+				pid = execute_program(shell, path, args, pipe_out, pipe_in, true); // background = true.
 
 				auto& job = shell.background_jobs.back();
 				cout << "[" << job.job_no << "] " << job.process_id << "\n"; 
 			}
 			else{
-				flag = execute_program(shell, path, args, NULL, false);
+				pid = execute_program(shell, path, args, pipe_out, pipe_in, background);
 			}
 
-			if(!flag)  cout << command << ": command not found" << endl;
+			if(pid==-1)  cout << command << ": command not found" << endl;
 		}
 	}
 }
 
+void get_commands(vector<string>& tokens){
+	string command;
+	vector<string> args;
 
+	bool piped = false;
+	int pipefd[2];
+	pipe(pipefd);
+
+	pid_t pid1;
+	pid_t pid2;
+	tokens.push_back("&&");
+	vector<pair<pid_t, pair<int, int>>> processes_running;
+
+	for(string s:tokens){
+		if(command.empty()) command = s;
+		else{
+			if(s == "&&" || s == "|"){ 
+				if(s == "|" || (s == "&&" && !processes_running.empty())){
+					int pipe_out[2];
+					if(s == "&&"){
+						pipe_out[1] = STDOUT_FILENO;
+					}
+					else pipe(pipe_out);
+
+					int pipe_in[2];
+					if(processes_running.empty()) {
+						pipe_in[0] = STDIN_FILENO;
+					}
+					else{
+						pipe_in[0] = processes_running.back().second.first;
+						pipe_in[1] = processes_running.back().second.second;
+					}
+					pid_t pid = fork();
+
+					if(pid == 0){
+						dup2(pipe_in[0], STDIN_FILENO);
+						dup2(pipe_out[1], STDOUT_FILENO);
+						execute_line(command, args);
+						_exit(0);
+					}
+		
+					if(pipe_in[0] != STDIN_FILENO) close(pipe_in[0]);
+					if(pipe_out[1] != STDOUT_FILENO) close(pipe_out[1]);
+
+					processes_running.push_back({pid, {pipe_out[0], pipe_out[1]}});
+
+					if(s == "&&"){
+						for (auto &i : processes_running) {
+							waitpid(i.first, nullptr, 0);
+						}
+						processes_running.clear();
+					
+					}
+				}
+				else if(s == "&&") execute_line(command, args);
+
+				command.clear(); args.clear();
+			}
+			else args.push_back(s);
+		}
+	}
+}
 
 int main() {
 	shell.builtins = {"echo", "exit", "type", "pwd", "complete", "jobs"};
@@ -337,17 +398,15 @@ int main() {
 		// parsing the line.
 
 		vector<string> tokens = get_args(shell.line); 
-		string command = tokens[0];
-		if (command.empty()) {
+		string base_command = tokens[0];
+		if (base_command.empty()) {
 			continue;
 		}
 
-		vector<string> args(tokens.begin()+1, tokens.end());
-
-		if(command == "exit") break;
+		if(base_command == "exit") break;
 		
 		disableRawMode();
-		execute_line(command, args);
+		get_commands(tokens); // gets different commands and executes them. 
 		enableRawMode();
 
 		reap_finished_jobs(shell); // after execution but before next command.

@@ -162,7 +162,7 @@ string program_find_in_path(string command){
 }
 
 
-int execute_program(Shell& shell, string& path, vector<string>& args, int* pipe = NULL, bool background = false){
+pid_t execute_program(Shell& shell, string& path, vector<string>& args, int* pipe_out=NULL, int* pipe_in =NULL, bool background=false){
     string program = split(path, '/').back();
 	vector<char*> argv = {program.data()};
 
@@ -179,7 +179,6 @@ int execute_program(Shell& shell, string& path, vector<string>& args, int* pipe 
 				create_file(output_path, output-1);
 				output_path = "";
 			}
-
 			output = 1;
 			error = 0;
 			if(args[i] == "1>>" || args[i] == ">>") output = 2;
@@ -203,18 +202,25 @@ int execute_program(Shell& shell, string& path, vector<string>& args, int* pipe 
 	argv.push_back(nullptr);
 
 	// executing the program.
+	pid_t pid = -1;
 
 	if(path!="" && is_executable(path)) {
-		pid_t pid = fork();
+		pid = fork();
 		if (pid < 0) {
 			std::cerr << "fork() failed\n";     // fork failed
 
 		} else if (pid == 0) {
 			// child process
-            if(pipe != NULL){
-                close(*pipe);                    // Close read end
-                dup2(*(pipe+1), STDOUT_FILENO);      // stdout -> pipe
-                close(*(pipe+1));
+
+			if(pipe_in != NULL){
+				close(pipe_in[1]);                    // Close write end, read karna isliye.
+                dup2(pipe_in[0], STDIN_FILENO);      // stdin <- pipe
+                close(pipe_in[0]);
+			}
+            if(pipe_out != NULL){
+                close(pipe_out[0]);                    // Close read end
+                dup2(pipe_out[1], STDOUT_FILENO);      // stdout -> pipe
+                close(pipe_out[1]);
             }
 			else if(output){ // put stout to file not termninal.
 				output --;
@@ -232,10 +238,10 @@ int execute_program(Shell& shell, string& path, vector<string>& args, int* pipe 
 			}
 
 			execv(path.data(), argv.data());
-			cout << "\r$ ";
 
 			perror("execv"); // execv() failed
 			exit(1); // exit child process with error code
+			// child process doesnt go out of this.
 
 		} else {
 			// parent processrun
@@ -243,13 +249,13 @@ int execute_program(Shell& shell, string& path, vector<string>& args, int* pipe 
 				string command = normalise_command_line(shell.history.back());
 				shell.background_jobs.push_back(Job{(int)shell.background_jobs.size()+1, pid, "Running", command}); // add the background job.
 			}
-			else waitpid(pid, nullptr, 0);
-
+			else waitpid(pid, nullptr, 0); // nullptr means we don't care about the exit status of the child process. 
+										   //waitpid() will block until the child process terminates.
+										   // 0 means we want to wait for the child process to terminate normally (not due to a signal).
 		}
-        return 1;
 
 	}
-    return 0;
+    return pid;
 
 }
 

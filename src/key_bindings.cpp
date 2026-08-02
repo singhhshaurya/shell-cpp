@@ -71,9 +71,9 @@ vector<string> check_with_complete(Shell& shell){
 
                 int pipefd[2];
                 pipe(pipefd);
-                int flag = execute_program(shell, path, tokens, pipefd); // capture the data in pipe. flag = 0 if path not executable.
+                pid_t flag = execute_program(shell, path, tokens, pipefd); // capture the data in pipe. flag = 0 if path not executable.
                 close(pipefd[1]);
-                if(flag == 0) return completes; // path not found bekar. return empty completes.
+                if(flag == -1) return completes; // path not found bekar. return empty completes.
 
                 string output = capture_output_from_pipe(pipefd); // read from pipe.
                 close(pipefd[0]);

@@ -14,6 +14,8 @@
 
 # PIPE
 - pipe() is one of the simplest inter-process communication (IPC) mechanisms in Unix.
+- IPC because kernel manages the pipe and allows communication between processes. Pipes are shared between processes instead of having own copies.
+
 - A pipe is a kernel-managed byte buffer with two ends:
 
 Read end — you can only read from it.
@@ -27,6 +29,8 @@ Write end — you can only write to it.
 - WRITING: either use write() function, or change STOUT using dup2() to redirect the standard output to the write end of the pipe, and then use std::cout to write to the pipe. Can also use ofstream to write to the pipe.
 
 - READING: either use read() function, or change STDIN using dup2() to redirect the standard input to the read end of the pipe, and then use std::cin to read from the pipe. Can also use ifstream to read from the pipe.
+
+*IMPORTANT: PIPE IS KERNEL MANAGED BYTE BUFFER. THAT MEANS WHEN FORKING A CHILD PROCESS, THE CHILD WILL HAVE ITS OWN COPY OF THE PIPE FILE DESCRIPTORS BUT THE MAIN PIPE REMAINS SHARED, unlike other data structures.*
 
 write end  ----->  kernel buffer  ----->  read end
 
@@ -85,3 +89,35 @@ std::cin >> input; // read from the pipe using std::cin
 std::cout << input << std::endl; // print the data read from the pipe
 ```
 
+## CLOSING PIPE DESCRIPTORS.
+- After you are done using the pipe, it is important to close the file descriptors to free up system resources. You can use the close() function to close the read and write ends of the pipe.
+
+```cpp
+// IF PIPE NEEDED FOR READ ONLY.
+int pipefd[2];
+pipe(pipefd);
+
+close(pipefd[1]); // close the write end of the pipe at the beginning as no need of it.
+dup2(pipefd[0], STDIN_FILENO);
+close(pipefd[0]); // close the read end of the pipe. 
+
+
+```
+INITIALLY
+fd 0 (stdin)  ─────► Terminal
+
+fd 3 ──────────────► Pipe (READ end) 
+fd 4 ──────────────► Pipe (WRITE end)
+
+AFTER close(pipefd[1]) and dup2(pipefd[0], STDIN_FILENO)
+
+fd 0 (stdin)  ─────► Pipe (READ end)
+fd 3 ──────────────► Pipe (READ end)
+
+AFTER close(pipefd[0])
+fd 0 (stdin)  ─────► Pipe (READ end) only remains.
+
+- When a process ends, all its file descriptors are automatically closed, including those for the pipe.
+
+## CLOSING PROGRAMS USING PIPES
+- If another process is using write fd of the pipe and all the read fds are closed, the writing process will receive a SIGPIPE signal, which by default terminates the process. If the writing process ignores the SIGPIPE signal, the write() function will return -1 and set errno to EPIPE.

@@ -37,5 +37,6 @@ public:
     unordered_map<string, pair<string, string>> tab_completions;
     vector<Job> background_jobs; // {job_id and process_id}
 	char backspace = '\b';
+    string remove_line = "\033[A";
 };
 

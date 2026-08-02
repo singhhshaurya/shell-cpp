@@ -65,7 +65,8 @@ This running instance is called a process.
 
 - The OS is responsible for creating and managing processes, keeping a table with all the processes and their information, which is used for process management and scheduling.
 
-## Fork and Exec
+
+## Fork and Exec - CREATING CHILD PROCESSES.
 - *FORK*: The fork() system call creates a new process by duplicating the calling process. The new process is called the child process, and the calling process is called the parent process. The child process gets a unique PID, and it inherits a copy of the parent's memory space, including variables, stack, and heap.
 
 
@@ -120,13 +121,51 @@ wait() <────────┘
 This fork() → exec() → wait() pattern is the foundation of most Unix command execution.
 
 
-### WORKING CHILD PROCESS IN THE BACKGROUD
+## WHAT IS SHARED BETWEEN PARENT AND CHILD PROCESS
+- The child process gets a copy of the parent's memory space, including variables, stack, and heap.
+- However, the child process has its own separate memory space, so changes made in the child process do not affect the parent process, and vice versa.
+
+- *KERNEL OBJECTS*: Some kernel-managed resources are shared between the parent and child processes, such as *file descriptors*, *pipes*, and *sockets*. This allows for inter-process communication (IPC) between the parent and child processes.
+
+
+
+### WORKING CHILD PROCESS IN THE BACKGROUD - SIGNALS
+
 - 1. use pid in the parent process to keep track of the child process. pid in parent process refers to process id of child process.
 - 2. while ((pid = waitpid(-1, &status, WNOHANG)) > 0) use this to reap all child processes that have finished executing.
 
--  WNOHANG option allows the parent process to continue running without blocking, even if some child processes are still running.
+#### Option 1: WNOHANG
+- WNOHANG option allows the parent process to continue running without blocking, even if some child processes are still running.
 
-while ((pid = waitpid(-1, &status, WNOHANG)) > 0) returns the PID of a child process that has finished executing, or 0 if no child processes have finished yet. The loop continues until all finished child processes have been reaped.
+while ((pid = waitpid(-1, &status, WNOHANG)) > 0) 
+
+returns the PID of a child process that has finished executing, or 0 if no child processes have finished yet. The loop continues until all finished child processes have been reaped.
+
+
+- #### OPTION 2: Signals (SIGCHILD)
+- A signal is a small asynchronous notification sent by the operating system.
+- Some commong and importang singals to know:
+| Signal    | Meaning               |
+| --------- | --------------------- |
+| `SIGINT`  | Ctrl+C                |
+| `SIGTERM` | Termination request   |
+| `SIGKILL` | Force kill            |
+| `SIGSTOP` | Stop process          |
+| `SIGCONT` | Continue process      |
+| `SIGCHLD` | A child changed state |
+
+- When any child changes state (usually exits), the kernel sends the parent process a signal calledd `SIGCHLD`.
+
+*ZOMBIE PROCESS*: A zombie process is a process that has completed execution but still has an entry in the process table. It occurs when a child process terminates, but the parent has not yet called wait() to retrieve its exit status. 
+- The zombie process remains in the process table until the parent calls wait() or the parent itself terminates. Linux keeps tiny amt of info like PID, exit status, etc. about the zombie process in the process table so that the parent can retrieve it later.
+
+
+## CLOSING CHILD PROCESSES MID PROCESS
+- using kill(pid, SIGKILL) to terminate a child process.
+- using file descriptors: if a process uses write to write to a pipe, and the read end of the pipe is closed, the process will receive a SIGPIPE signal, which by default terminates the process. This can be used to close child processes that are writing to a pipe when the parent process no longer needs their output.
+
+
+
 
 
 

@@ -22,7 +22,7 @@ string program_find_in_path(string command);
 string capture_output_from_pipe(int* pipe);
 
 
-int execute_program(Shell& shell, string& path, vector<string>& args, int* pipe = NULL, bool background = false);
+pid_t execute_program(Shell& shell, string& path, vector<string>& args, int* pipe_out=NULL, int* pipe_in =NULL, bool background=false);
 
 void reap_finished_jobs(Shell &shell, bool output=true);
 
