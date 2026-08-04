@@ -45,3 +45,5 @@ void read_history(Shell& shell, string path="");
 string env_or_default(const char* name, const string& def = "");
 
 bool valid_variable_name(string& s);
+
+bool is_command_complete(Shell& shell);

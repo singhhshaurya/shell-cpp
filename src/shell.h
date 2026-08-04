@@ -27,9 +27,12 @@ struct Job{
 
 class Shell {
 public:
+    string prev_line;
     string line;
     int updown_ptr = 0;
 	int leftright_ptr = 0;
+    bool incomplete_command = 0;
+    bool terminate_shell = 0;
     unordered_set<string> builtins;
 	filesystem::path curr_directory  = getcwd(nullptr, 0); // posix function to get current directory. use chdir() to change it. 
 	unordered_map<string, function<void(vector<string>&)>> commands;
@@ -45,6 +48,7 @@ public:
     vector<string> history;
     int history_last_appended = 0;
     unordered_map<string, pair<string, string>> tab_completions;
+    unordered_map<string, string> aliases;
     vector<Job> background_jobs; // {job_id and process_id}
 	char backspace = '\b';
     string remove_line = "\033[A";

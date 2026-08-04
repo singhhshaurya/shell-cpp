@@ -32,12 +32,20 @@ bool invalid_command(string s){
 
 // BUILTIN COMMANDS
 
-int type(vector<string>& args){
+void exit0(vector<string>& args){
+	shell.terminate_shell = 1;
+}
+
+void type(vector<string>& args){
 	// check if its builtin
 	string command = args[0];
+	if(shell.aliases.find(command)!=shell.aliases.end()) {
+		cout << command << " is aliased to `" << shell.aliases[command] <<"'" <<endl;
+		return;
+	}
 	if(shell.builtins.find(command) != shell.builtins.end()){
 		cout << command << " is a shell builtin" << endl;
-		return 1;
+		return;
 	}
 
 
@@ -45,11 +53,11 @@ int type(vector<string>& args){
 	string path = program_find_in_path(shell, command);
 	if(path != "" && is_executable(path)){
 		cout << command << " is " << path << endl;
-		return 1;
+		return;
 	}
 
 	cout << command << ": not found" << endl;
-	return 1;
+	return;
 }
 
 
@@ -285,15 +293,48 @@ void declare(vector<string>& args){
 		}
 	}
 }
+
+
+void alias(vector<string>& args){
+	for(string s:args){
+		if(s.find("=")==string::npos){
+			if(shell.aliases.find(s)!=shell.aliases.end()){
+				cout << "alias " << s <<"='" << shell.aliases[s] << "'" << endl;
+			}else{
+				cout << "alias: " << s << ": not found";
+			}
+		}
+		else{
+			vector<string> tokens = split(s, '=', 1);
+			string name = tokens[0]; string value = tokens[1];
+			shell.aliases[name] = value;
+		}
+	}
+}
 // EXECUTION
 
+void get_commands(vector<string>& tokens);
+
+
 void execute_command(string& command, vector<string>& args, int* pipe_out=NULL, int* pipe_in=NULL, bool background=false){
-	if (shell.commands.find(command)!=shell.commands.end()){ // builtin.
+	if(shell.aliases.find(command)!= shell.aliases.end()){
+		vector<string> tokens = get_args(shell, shell.aliases[command]); 
+		get_commands(tokens); // gets different commands and executes them. 
+	}
+	else if (shell.commands.find(command)!=shell.commands.end()){ // builtin.
 		shell.commands[command](args); // execute that 
 	}else{
 		string path;
 		if(split(command, '/').size()>1){
 			path = command;
+			if(!exists(path)) {
+				cout << command << ": No such file or directory" << endl;
+				return;
+			}
+			else if(is_directory(path)) {
+				cout << command << ": Is a directory" << endl;
+				return;
+			}
 		}
 		else path = program_find_in_path(shell, command);
 
@@ -312,7 +353,7 @@ void execute_command(string& command, vector<string>& args, int* pipe_out=NULL, 
 				pid = execute_program(shell, path, args, pipe_out, pipe_in, background);
 			}
 
-			if(pid==-1)  cout << command << ": command not found" << endl;
+			if(pid==-1)  cout << command << ": Permission denied" << endl;
 		}
 	}
 }
@@ -386,9 +427,9 @@ void get_commands(vector<string>& tokens){
 
 
 int main() {
-	shell.builtins = {"echo", "exit", "type", "pwd", "complete", "jobs", "history", "alias", "export", "declare"};
-	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}, {"complete", complete}, {"jobs", jobs},
-					  {"history", history}, {"declare", declare}}; // add all the builtins.
+	shell.builtins = {"echo", "exit", "type", "pwd", "complete", "jobs", "history", "alias", "export", "declare", "alias"};
+	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}, {"complete", complete}, {"jobs", jobs}, {"exit", exit0},
+					  {"history", history}, {"declare", declare}, {"alias", alias}}; // add all the builtins.
 
 	for(string s:shell.exported_vars){
 		shell.variables[s] = env_or_default(s.data()); // default is "" for now.
@@ -410,9 +451,10 @@ int main() {
 	ofstream history_write_file(shell.variables["HISTFILE"], ios::app);  
 
 
-	while(true){
-		// cout << get_directory(shell) << "$ ";
-		cout << "\r$ ";
+	while(!shell.terminate_shell){
+		if(shell.incomplete_command) cout << "\r> ";
+		// else cout << get_directory(shell) << "$ ";
+		else cout << "\r$ ";
 
 		bool go = 1;
 		int tab_count = 0;
@@ -471,6 +513,26 @@ int main() {
 
 		}
 
+		if(!is_command_complete(shell)){
+			shell.line += "\n";
+			shell.prev_line += shell.line;
+			shell.line.clear();
+			shell.leftright_ptr = 0;
+			shell.incomplete_command = 1;
+		}
+		else{
+			shell.line = shell.prev_line + shell.line;
+			shell.incomplete_command = 0;
+			shell.prev_line.clear();
+		}
+
+		vector<string> tokens = get_args(shell, shell.line); 
+		if(tokens.empty()){
+			shell.line.clear();
+			shell.leftright_ptr = 0;
+			continue;
+		}
+
 		if (!shell.line.empty() &&  (shell.history.empty() || shell.line != shell.history.back())) {
 			shell.history.push_back(shell.line);
 			history_write_file << shell.line << endl;
@@ -478,13 +540,6 @@ int main() {
 		shell.updown_ptr = shell.history.size();
 		// parsing the line.
 
-		vector<string> tokens = get_args(shell, shell.line); 
-		string base_command = tokens[0];
-		if (base_command.empty()) {
-			continue;
-		}
-
-		if(base_command == "exit") break;
 		
 		disableRawMode();
 		get_commands(tokens); // gets different commands and executes them. 

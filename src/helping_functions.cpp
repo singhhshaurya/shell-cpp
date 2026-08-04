@@ -123,6 +123,24 @@ void exchange_variables(Shell& shell, string& arg){
 	if(arg.back() == ' ') arg.pop_back();
 }
 
+
+bool is_command_complete(Shell& shell){
+	string command = shell.prev_line+shell.line;
+	bool single_quotes_closed = 1;
+	bool double_quotes_closed = 1;
+	bool back_slash = 0;
+	for(char c:command){
+		if(back_slash) back_slash = 0;
+		// backslashes
+		else if(c == '\\' && single_quotes_closed) back_slash = 1;
+		
+		// quotation marks
+		else if(c=='\'' && double_quotes_closed) single_quotes_closed = !single_quotes_closed;
+		else if(c=='\"' && single_quotes_closed) double_quotes_closed = !double_quotes_closed;
+	}
+	return single_quotes_closed && double_quotes_closed;
+}
+
 vector<string> get_args(Shell& shell, string& command){
 	bool single_quotes_closed = 1;
 	bool double_quotes_closed = 1;
