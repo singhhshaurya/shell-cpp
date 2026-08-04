@@ -31,7 +31,8 @@ int create_file(string path, int append = 0){
     return fd;
 }
 
-vector<string> split(string s, char delimeter=' '){
+
+vector<string> split(string s, char delimeter=' ', int count=-1){
 	vector<string> ans;
 	int ptr = 0; 
 
@@ -39,12 +40,36 @@ vector<string> split(string s, char delimeter=' '){
 		if(s[i]==delimeter){
 			ans.push_back(s.substr(ptr, i-ptr));
 			ptr = i+1;
+			count --;
 		}	
+		if(count == 0){
+			ans.push_back(s.substr(ptr, s.size()-ptr));
+			return ans;
+		}
 	}
 	ans.push_back(s.substr(ptr, s.size()-ptr));
+	for(int i=0; i<count; i++) ans.push_back("");
 	return ans;
 }
 
+
+bool is_digits(string& s){
+	for(char c:s){
+		if(!isdigit(c)) return 0;
+	}
+	return 1;
+}
+
+
+bool valid_variable_name(string& s){
+	if(!(isalpha(s[0]) || s[0] == '_')) return false;
+
+	for(int i=1; i<s.size(); i++){
+		if(!(isalpha(s[i]) || isdigit(s[i]) || s[i]=='_')) return false;
+	}
+	return true;
+
+}
 string normalise_command_line(string& line){
 	string output;
 	int ptr = 0;
@@ -63,12 +88,51 @@ string normalise_command_line(string& line){
 	return output;
 }
 
-vector<string> get_args(string& command){
+
+void exchange_variables(Shell& shell, string& arg){
+	string var_name;
+	int variable = 0;
+	int bracket = 0;
+	arg += " ";
+	int ptr = 0;
+
+	int i = 0;
+	while(i < arg.size()){
+		char c = arg[i];
+		if(variable && (c == '$' || c == ' ' || (bracket && c == '}' ))){
+			string value;
+			if(shell.variables.find(var_name) != shell.variables.end()) value = shell.variables[var_name];
+			else value = "";
+
+			arg = arg.substr(0, ptr) + value + arg.substr(i+bracket, arg.size()-i-bracket);
+			i += value.size() - (i-ptr);
+			variable = 0;
+			bracket = 0;
+			var_name.clear();
+		}
+		if(c == '$') {
+			ptr = i;
+			variable = 1;
+		}
+		else if(c == '{') {
+			bracket = 1;
+		}
+		else if(variable) var_name += c;
+		i++;
+	}
+	if(arg.back() == ' ') arg.pop_back();
+}
+
+vector<string> get_args(Shell& shell, string& command){
 	bool single_quotes_closed = 1;
 	bool double_quotes_closed = 1;
 	bool back_slash = 0;
 	bool arrow = 0;
+	bool variable = 0;
+	string variable_name = "";
+
 	vector<string> args;
+	command.push_back(' ');
 
 	string curr;
 	for(char c:command){
@@ -101,17 +165,21 @@ vector<string> get_args(string& command){
 			arrow = 1;
 		}
 		else if(c == ' ' && single_quotes_closed && double_quotes_closed){
+			// finding variables and replacing them.
+			exchange_variables(shell, curr);
+
 			if(curr != "") args.push_back(curr);
 			curr = "";
 		}
-
-
 		else curr += c;
 
+		if(c == '$') variable = 1;
+
 	}
-	args.push_back(curr);
+
 	return args;
 }
+
 
 vector<string> fetch_option_flags(vector<string>& args){
     vector<string> option_flags;
@@ -120,7 +188,6 @@ vector<string> fetch_option_flags(vector<string>& args){
     }
     return option_flags;
 }
-
 
 
 string capture_output_from_pipe(int* pipe){
@@ -134,19 +201,27 @@ string capture_output_from_pipe(int* pipe){
     return output;
 }
 
+
+
+string env_or_default(const char* name, const string& def = ""){
+    const char* p = getenv(name);
+    return p ? p : def;
+}
+
+
 bool is_executable(string path){
     return access(path.c_str(), X_OK) == 0;
 }
 
 
 string get_directory(Shell& shell){
-	if(shell.curr_directory == "" or shell.curr_directory == "/") return getenv("HOME");
+	if(shell.curr_directory == "" or shell.curr_directory == "/") return shell.variables["HOME"];
 	return shell.curr_directory;
 }
 
 
-string program_find_in_path(string command){
-	string PATH = getenv("PATH"); // gets path from environment.
+string program_find_in_path(Shell& shell, string command){
+	string PATH = shell.variables["PATH"]; // gets path from environment.
 	// cout << PATH << "\n";
 
 	for(string dir:split(PATH, ':')){
@@ -309,12 +384,27 @@ void add_executables(Shell& shell, string path){
 }
 
 
+void read_history(Shell& shell, string path = ""){
+
+	if(path.empty()) {
+		path = shell.variables["HISTFILE"];
+	}
+	ifstream fin(path);
+	string command;
+	while(getline(fin, command)){
+		shell.history.push_back(command);
+	}
+	shell.updown_ptr = shell.history.size();
+}
+
+
+
 // run this only once in beginning. 
 void get_all_executables(Shell& shell){ 
     
     for(string s:shell.builtins) shell.all_executables.push_back(s);
 
-    string PATH = getenv("PATH"); // gets path from environment.
+    string PATH = shell.variables["PATH"]; // gets path from environment.
     string name;
     
     for(string dir:split(PATH, ':')){

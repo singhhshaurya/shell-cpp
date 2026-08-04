@@ -14,7 +14,48 @@ Information about the shell and its functionality can be found in the [shell_the
   - type: Display information about a command, including whether it is a builtin command or an external executable.
 
 
-# Path
+
+# Variables in Unix Shell and Environment
+- ## Shell variables
+  - A shell variable exists only inside the shell process. 
+  - Exists only inside the shell, child processes cannot access them, getenv() cannot access them.
+  ```bash
+  NAME="Alice"
+  COUNT=10
+  HISTFILE=~/.bash_history
+  PS1="\u@\h$ "
+  ```
+- ## Environment variables
+  - Environment variables are shell variables that have been exported.
+  - They are available to the shell and any child processes created by the shell.
+  - They can be accessed by child processes using the getenv() function in C/C++.
+  - By 'export' it means that the variable is added to the environment of the shell and its child processes.
+  ```bash
+  export PATH="/usr/local/bin:$PATH"
+  export HOME="/home/user"
+  export LANG="en_US.UTF-8"
+  ```
+
+  *RELATIONSHIP* Every env variable is a shell variable, but not every shell variable is an env variable. Only those shell variables that have been exported become environment variables.
+
+## Process Environment
+  - Every process has its own environment, which is a collection of environment variables that are inherited from the parent process. The environment is used to configure the behavior of the process and provide information about the system and user settings.
+  - So an environment is just a collection of strings, KEY=value pair.
+
+  - A shell, when starting executes bunch of EXPORT commands, which sets up the environment for the shell and its child processes. These environment variables can be used by the shell and any programs it runs to customize their behavior based on the user's preferences and system settings.
+
+
+## Checking if a variable is a shell variable or an environment variable:
+- Use the `set` command to list all shell variables and functions. This will show both shell variables and environment variables, but it will not distinguish between them.
+- Use the `export` command to list all environment variables. This will show only the variables that have been exported and are available to child processes.
+- Use the `env` command to list all environment variables. This will show only the variables that are part of the environment and are available to child processes.
+- For particular variable, use `declare -p VARIABLE_NAME` to check if it is a shell variable or an environment variable. If the variable is a shell variable, it will be displayed with the `declare -- ` command. If it is an environment variable, it will be displayed with the `declare -x` command.
+
+
+
+
+
+##  Path
 - The PATH environment variable is a list of directories that the shell searches for executable files when a command is entered.
 -  When you type a command, the shell looks through each directory in the PATH variable in order until it finds an executable file with the same name as the command. If it finds one, it runs that file; if not, it returns an error indicating that the command was not found.
   

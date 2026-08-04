@@ -1,13 +1,17 @@
-CMakeLists.txt
-README.md
-codecrafters.yml
-fsatweafs
-main
-notes
-out.txt
-output.txt
-output2.txt
-src
-vcpkg-configuration.json
-vcpkg.json
-your_program.sh
+history
+run
+echo $HISTFILE
+history
+exit
+echo $HISTFILE
+exit
+echo $HISTFILE
+history
+exit
+echo $USER
+echo $HISTFILE
+exit
+echo random ass
+echo $HISTORY
+echo $HISTFILE
+exit

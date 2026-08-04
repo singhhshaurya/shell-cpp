@@ -1,0 +1,174 @@
+history
+exit
+echo random ass
+history
+history -w out.txt
+echo 2-3-4
+history -a out.txt
+exit
+echo what
+echo the
+history -a out.txt
+exit
+history
+history -c
+history
+echo $HISTFILE
+exit
+echo $HISTFILE
+exit
+echo $HISTFILE
+echo $PATH
+echo $USER
+exit
+echo $HISTFILE
+echo $USER
+exit
+echo randoma
+history
+exit
+declare random=2
+echo $random
+declare -p random
+exit
+declare -p HISTFILE
+declare foo=bar
+declare -p foo
+declare foo=bar2
+declare -p foo
+declare foo = bar2
+exit
+echo random
+history
+exit
+declare a=2
+declare -p a
+declare 223=2
+declare a=2 b=4
+declare -p
+declare -p b
+declare -b c
+declare a b
+declare -p a
+declare a b=2 2c=3
+declare -p b
+exit
+declare a=2
+declare b=3
+echo $a $b
+tail output.txt
+tail output.txt $a
+tail output.txt -n $a
+exit
+echo hello$HISTFILE
+exit
+echo $HISTFILE
+echo $PATH
+exit
+echo $HISTFILE
+echo ran$HISTFILE
+exit
+echo $HISTFILE
+echo what the
+echo what
+echo what the hell
+echo $HISTFILE
+exit
+echo $HISTFILE
+echo random
+echo $HISTFILE
+echo $RANDOM
+echo $HISTFILE
+exit
+echo $HISTFILE
+exit
+echo $HISTFILE
+echo $HISTFILE$HISTFILE
+run
+exit
+echo $HISTFILE
+echo $HISTFILE$HISTFILE
+exit
+echo $HISTFILE$HISFTILE
+echo $HISTFILE $HISTFILE
+exit
+echo $HISTFILE$HISFTILE
+exit
+echo $HISTFILE$HISFTILE
+exit
+echo $HISTFILE$HISTFILE
+echo ${HISTFILE}what a random day
+exit
+echo $HISTFILE$HISTFILE
+echo ${HISTFILE}what a random day
+echo hello
+exit
+declare Var1=foo
+declare Var2=poo
+echo ${Var1}end
+echo ${Var1}end{Var2}
+echo ${Var1}end${Var2}
+exit
+cd codecrafters-shell-cpp/
+env
+declare -p HISTFILE
+declare -p PATH
+echo $LOGNAME
+echo $USER
+echo $LANG
+pwd
+lang
+echo $PWD
+run
+alias run='src/before_run.sh && g++ src/main.cpp src/helping_functions.cpp src/key_bindings.cpp -o main && ./main'
+run
+echo $SFAF
+echo $USER
+run
+codecrafters submit
+export HISTFILE="out.txt"
+run
+history
+echo $HISTFILE
+clear
+codecrafters submit
+run
+export HISTFILE=out.txt
+run
+clear
+run
+codecrafters submit
+export HISFTILE=src/history
+run
+export HISTFILE=src/history
+run
+declare sfasfas
+declare -p HISTFILE
+declare -p HISTFILE afsfeqfas
+declare aa = 2
+run
+codecrafters submit
+run
+codecrafters submit
+echo random
+history
+run
+clear
+codecrafters submit
+run
+codecrafters submit
+urn
+run
+codecrafters submit
+echo hello$HISTFILE
+run
+codecrafters submit
+echo $HISTFILE
+echo $HISTFILE$PATH
+echo $HISTFILE what
+echo $HISTFILEwhat
+run
+codecrafters submit
+echo haha
+history
+exit

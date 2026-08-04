@@ -26,11 +26,6 @@ Shell shell;
 
 
 
-
-
-
-
-
 bool invalid_command(string s){
 	return shell.builtins.find(s) == shell.builtins.end();
 }
@@ -47,7 +42,7 @@ int type(vector<string>& args){
 
 
 	// check if its in path and executable.
-	string path = program_find_in_path(command);
+	string path = program_find_in_path(shell, command);
 	if(path != "" && is_executable(path)){
 		cout << command << " is " << path << endl;
 		return 1;
@@ -111,7 +106,7 @@ void echo(vector<string>& args){
 		file << output << '\n';
 	}
 	else{
-		output.pop_back();
+		if(!output.empty()) output.pop_back();
 		cout << output << endl;
 	}
 }
@@ -119,7 +114,7 @@ void echo(vector<string>& args){
 
 void pwd(vector<string>& args){
 	if(shell.curr_directory == "" or shell.curr_directory == "/"){
-		cout << getenv("HOME") << endl;
+		cout << shell.variables["HOME"] << endl;
 	}
 	else cout << shell.curr_directory.string() << endl;
 
@@ -225,17 +220,87 @@ void jobs(vector<string>& args){
 }
 
 
+void history(vector<string>& args){
+	int count = -1;
+	if(args.size()) {
+		if(is_digits(args[0])) count = stoi(args[0]);
+		else if(args[0] == "-r" || args[0]=="-w" || args[0]=="-a"){
+			string path;
+			if(args.size()==1) path = shell.variables["HISTFILE"];
+			else path = args[1];
+
+			if(args[0]=="-r") read_history(shell, path);
+			else if(args[0]=="-w"){
+				ofstream file(path);  
+				for(string s:shell.history) file << s <<"\n";
+			}
+			else if(args[0]=="-a"){
+				ofstream file(path, ios::app);
+				for(int i = shell.history_last_appended; i<shell.history.size(); i++){
+					file << shell.history[i] << "\n";
+				}
+				shell.history_last_appended = shell.history.size();
+			}
+		}
+		else if(args[0] == "-c"){
+			shell.history.clear();
+			shell.updown_ptr = 0;
+		}
+		else{
+			cout << "history: " << args[0] << ": numeric agent required\n";
+			return;
+		}
+
+	}
+	else count = shell.history.size();
+
+	for(int i=shell.history.size()-count; i<shell.history.size(); i++){
+		cout << "    " << i+1 << "  " << shell.history[i] << "\n";
+	}
+	
+}
+
+
+void declare(vector<string>& args){
+    if(args[0] == "-p"){
+		for(int i=1; i<args.size(); i++){
+			if(shell.variables.find(args[i]) != shell.variables.end()){
+				cout << "declare -" << (shell.exported_vars.find(args[i])!=shell.exported_vars.end()?"x":"-") << " " <<
+				args[i] << "=\"" << shell.variables[args[i]] << "\"" << endl;
+			}else{
+				cout << "declare: " << args[i] <<": not found" << endl;
+			}
+		}
+	}else{
+		for(int i=0; i<args.size(); i++) {
+			vector<string> tokens = split(args[i], '=', 1);
+			string key=tokens[0]; 
+			string value= tokens[1];
+			if(!valid_variable_name(key)) {
+				cout << "declare: `" << args[i] <<"\': not a valid identifier" << endl;
+			}
+			else{
+				shell.variables[key] = value;
+			}
+		}
+	}
+}
 // EXECUTION
 
-void execute_line(string& command, vector<string>& args, int* pipe_out=NULL, int* pipe_in=NULL, bool background=false){
+void execute_command(string& command, vector<string>& args, int* pipe_out=NULL, int* pipe_in=NULL, bool background=false){
 	if (shell.commands.find(command)!=shell.commands.end()){ // builtin.
 		shell.commands[command](args); // execute that 
 	}else{
-		string path = program_find_in_path(command);
+		string path;
+		if(split(command, '/').size()>1){
+			path = command;
+		}
+		else path = program_find_in_path(shell, command);
+
 		if(path == "") cout << command << ": command not found\n";
 		else {
 			pid_t pid;
-			if(args.back() == "&"){
+			if(args.size() && args.back() == "&"){
 				args.pop_back();
 				int curr_jobs = shell.background_jobs.size();
 				pid = execute_program(shell, path, args, pipe_out, pipe_in, true); // background = true.
@@ -251,6 +316,7 @@ void execute_line(string& command, vector<string>& args, int* pipe_out=NULL, int
 		}
 	}
 }
+
 
 void get_commands(vector<string>& tokens){
 	string command;
@@ -289,7 +355,7 @@ void get_commands(vector<string>& tokens){
 					if(pid == 0){
 						dup2(pipe_in[0], STDIN_FILENO);
 						dup2(pipe_out[1], STDOUT_FILENO);
-						execute_line(command, args);
+						execute_command(command, args);
 						_exit(0);
 					}
 		
@@ -306,7 +372,9 @@ void get_commands(vector<string>& tokens){
 					
 					}
 				}
-				else if(s == "&&") execute_line(command, args);
+				else if(s == "&&") {
+					execute_command(command, args);
+				}
 
 				command.clear(); args.clear();
 			}
@@ -315,9 +383,17 @@ void get_commands(vector<string>& tokens){
 	}
 }
 
+
+
 int main() {
-	shell.builtins = {"echo", "exit", "type", "pwd", "complete", "jobs"};
-	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}, {"complete", complete}, {"jobs", jobs}}; // add all the builtins.
+	shell.builtins = {"echo", "exit", "type", "pwd", "complete", "jobs", "history", "alias", "export", "declare"};
+	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}, {"complete", complete}, {"jobs", jobs},
+					  {"history", history}, {"declare", declare}}; // add all the builtins.
+
+	for(string s:shell.exported_vars){
+		shell.variables[s] = env_or_default(s.data()); // default is "" for now.
+	}
+
     // Flush after every std::cout / std:cerr
     // # REPL  Read-Eval-Print Loop
 	
@@ -326,15 +402,17 @@ int main() {
 
 	enableRawMode();
 	get_all_executables(shell);
+	read_history(shell); // get history from previous sessions.
 
 
 	int TERMINAL_OUT = dup(STDOUT_FILENO);
 	int TERMINAL_IN = dup(STDIN_FILENO);
+	ofstream history_write_file(shell.variables["HISTFILE"], ios::app);  
+
 
 	while(true){
 		// cout << get_directory(shell) << "$ ";
 		cout << "\r$ ";
-
 
 		bool go = 1;
 		int tab_count = 0;
@@ -393,11 +471,14 @@ int main() {
 
 		}
 
-		if (!shell.line.empty() &&  (shell.history.empty() || shell.line != shell.history.back())) shell.history.push_back(shell.line);
+		if (!shell.line.empty() &&  (shell.history.empty() || shell.line != shell.history.back())) {
+			shell.history.push_back(shell.line);
+			history_write_file << shell.line << endl;
+		}
 		shell.updown_ptr = shell.history.size();
 		// parsing the line.
 
-		vector<string> tokens = get_args(shell.line); 
+		vector<string> tokens = get_args(shell, shell.line); 
 		string base_command = tokens[0];
 		if (base_command.empty()) {
 			continue;
