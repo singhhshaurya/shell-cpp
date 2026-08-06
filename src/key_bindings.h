@@ -23,4 +23,6 @@ void onTab(Shell& shell, int& tab_count);
 
 void onBackspace(Shell& shell);
 
+void onControlBackspace(Shell& shell);
+
 

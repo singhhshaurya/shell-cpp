@@ -201,13 +201,35 @@ nice to met ya"
 asfsaf" 
 p 
 exit 
-alias run='src/before_run.sh && g++ src/main.cpp src/helping_functions.cpp src/key_bindings.cpp -o main && ./main' 
-run 
-alias run='src/before_run.sh && g++ src/main.cpp src/helping_functions.cpp src/key_bindings.cpp -o main && ./main' 
-run 
+echo ${HISTFILE}random${HISTFILE} 
+declare poo=fee 
+echo $poo 
+exit 
+random ass 
+echo  
+exit 
+echo 
 echo what 
+echo ah 
+echo ah hell naw mick 
 exit 
+echo what the helly.is 
 exit 
+echo what th 
 exit 
-eexit 
+echo what is happenng here 
+history 
+exit 
+ech 
+exit 
+exit  
+echo what the is happening to mehelly 
+echo what is to me ah hell naw mick foley 
+echo "hello
+my guy
+saasori!
+" 
+echo "hello
+what
+is this" 
 exit 

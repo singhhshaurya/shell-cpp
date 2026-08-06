@@ -219,8 +219,24 @@ void onRight(Shell& shell){
 
 void onBackspace(Shell& shell){
     if(shell.leftright_ptr){
-        cout << "\b \b";
         shell.leftright_ptr --;
         shell.line.erase(shell.line.begin() + shell.leftright_ptr);
+
+        string suffix = shell.line.substr(shell.leftright_ptr);
+        if(suffix.empty()){
+            cout << "\b \b";
+        } else {
+            cout << "\b" << suffix << ' ' << string(suffix.size() + 1, '\b');
+        }
     }
 }
+
+
+
+void onControlBackspace(Shell& shell){
+    while(shell.leftright_ptr && shell.line[shell.leftright_ptr - 1] == ' ') onBackspace(shell);
+    while(shell.leftright_ptr && shell.line[shell.leftright_ptr - 1] != ' ') onBackspace(shell);
+}
+
+
+

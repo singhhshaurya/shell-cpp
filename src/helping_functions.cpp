@@ -220,7 +220,6 @@ string capture_output_from_pipe(int* pipe){
 }
 
 
-
 string env_or_default(const char* name, const string& def = ""){
     const char* p = getenv(name);
     return p ? p : def;

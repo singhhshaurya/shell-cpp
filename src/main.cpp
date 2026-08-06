@@ -295,6 +295,12 @@ void declare(vector<string>& args){
 }
 
 
+void export0(vector<string>& args){
+	vector<string> declare_args;
+
+}
+
+
 void alias(vector<string>& args){
 	for(string s:args){
 		if(s.find("=")==string::npos){
@@ -425,7 +431,6 @@ void get_commands(vector<string>& tokens){
 }
 
 
-
 int main() {
 	shell.builtins = {"echo", "exit", "type", "pwd", "complete", "jobs", "history", "alias", "export", "declare", "alias"};
 	shell.commands = {{"echo", echo}, {"type", type}, {"pwd", pwd}, {"cd", cd}, {"complete", complete}, {"jobs", jobs}, {"exit", exit0},
@@ -452,8 +457,8 @@ int main() {
 
 
 	while(!shell.terminate_shell){
+		// cout << get_directory(shell) << "$ ";
 		if(shell.incomplete_command) cout << "\r> ";
-		// else cout << get_directory(shell) << "$ ";
 		else cout << "\r$ ";
 
 		bool go = 1;
@@ -498,12 +503,17 @@ int main() {
 				onBackspace(shell);
 				break;
 
+			case 23:
+				onControlBackspace(shell);
+				break;
+
 			case '\n':
 				cout << '\n';
 				go = 0;
 				break;
 
 			default:
+				// cout << (int)c; // to look what key gives what number.
 				cout << c << shell.line.substr(shell.leftright_ptr, shell.line.size() - shell.leftright_ptr);
 				cout << "\r" << "\033[" << shell.leftright_ptr+3 << "C"; // brings cursor back to where shell.leftright_ptr is.
 				shell.line.insert(shell.line.begin()+shell.leftright_ptr, c);
