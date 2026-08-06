@@ -1,2 +1,2 @@
 # shell-cpp
-shell created by me, using help from BUILD YOUR OWN X.
+A Unix-like command-line shell implemented from scratch in C++, with help from BUILD YOUR OWN X.
